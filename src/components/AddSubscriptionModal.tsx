@@ -1,32 +1,35 @@
-import React, { useState, useRef } from 'react';
-import { Bot, MessageSquare, Image, Search, Tv, Music, Video, Code, ShoppingBag } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Bot, MessageSquare, Image, Search, Tv, Music, Video, Code, ShoppingBag, Plus, Calendar, Loader2 } from 'lucide-react';
 import type { Subscription, PaymentMethod, BillingPeriod } from '../types';
 import { predictSubscription, getSubscriptionCategory } from '../utils/subscriptionPredictions';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { useDevice } from '../hooks/useDevice';
 import type { Currency } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
+import { supabase } from '../lib/supabase';
+import { DEFAULT_CATEGORIES } from '../lib/constants';
+import { DatePicker } from './DatePicker';
 
 const PAYMENT_METHODS: PaymentMethod[] = [
-  // Traditional Payment Methods
-  'Credit Card',
-  'Debit Card',
-  'PayPal',
-  'Bank Transfer',
-  'SEPA Direct Debit',
-  // Digital Wallets
-  'Apple Pay',
-  'Google Pay',
-  'Samsung Pay',
-  // Crypto
-  'Bitcoin',
-  'Lightning Network',
-  // Digital Banks
-  'Revolut',
-  'N26',
-  'Wise',
-  'Monzo',
-  'Starling'
+  'credit_card',
+  'debit_card',
+  'paypal',
+  'bank_transfer',
+  'apple_pay',
+  'google_pay',
+  'crypto'
 ];
+
+const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  'credit_card': 'Credit Card',
+  'debit_card': 'Debit Card',
+  'paypal': 'PayPal',
+  'bank_transfer': 'Bank Transfer',
+  'apple_pay': 'Apple Pay',
+  'google_pay': 'Google Pay',
+  'crypto': 'Cryptocurrency'
+};
 
 const CATEGORIES = [
   'AI Chat',
@@ -92,6 +95,7 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
   const paymentMethodRef = useRef<HTMLDivElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
   const { convertAmount } = useCurrency();
+  const { submitting } = useToast();
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -175,7 +179,7 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
   };
 
   // Scroll handling for mobile dropdowns
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isMobile) return;
 
     const adjustScroll = (ref: React.RefObject<HTMLDivElement>, show: boolean) => {
@@ -247,10 +251,19 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
 
   return (
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={submitting ? undefined : onClose} />
       <div className="fixed inset-0 flex items-start justify-center p-4 overflow-y-auto">
-        <div className="neumorphic-card rounded-xl p-8 w-full max-w-md mt-8 mb-20">
-          <h2 className="text-2xl font-bold mb-6 text-theme-primary">Add New Subscription</h2>
+        <div className={`neumorphic-card rounded-xl p-8 w-full max-w-md mt-8 mb-20 ${submitting ? 'opacity-70 pointer-events-none' : ''}`}>
+          {submitting && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/10 z-10 rounded-xl">
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="animate-spin text-emerald-500" size={32} />
+                <p className="text-theme-secondary">Adding subscription...</p>
+              </div>
+            </div>
+          )}
+          
+          <h2 className="text-2xl font-bold mb-6 text-theme-primary">Add Subscription</h2>
           
           <form onSubmit={handleSubmit}>
             <div className="space-y-6">
@@ -328,25 +341,24 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
+                  <label className="block text-sm font-medium mb-2 text-theme-secondary">Start Date</label>
+                  <DatePicker
+                    value={startDate}
+                    onChange={setStartDate}
+                    max={new Date().toISOString().split('T')[0]}
+                    required
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium mb-2 text-theme-secondary">Billing Period</label>
                   <select
                     value={billingPeriod}
-                    onChange={(e) => setBillingPeriod(e.target.value as BillingPeriod)}
+                    onChange={(e) => setBillingPeriod(e.target.value)}
                     className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   >
                     <option value="monthly">Monthly</option>
                     <option value="yearly">Yearly</option>
                   </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-theme-secondary">Start Date</label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    required
-                  />
                 </div>
               </div>
 
@@ -376,7 +388,7 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
                           onClick={() => handlePaymentMethodClick(method)}
                           className="w-full px-4 py-2 text-left hover:bg-gray-700/50 text-theme-primary transition-colors"
                         >
-                          {method}
+                          {PAYMENT_METHOD_LABELS[method as PaymentMethod]}
                         </button>
                       ))}
                     </div>

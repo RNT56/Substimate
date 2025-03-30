@@ -12,11 +12,13 @@ import { SubscriptionAnalytics } from './components/SubscriptionAnalytics';
 import { UsageStatistics } from './components/UsageStatistics';
 import { LandingPage } from './components/LandingPage';
 import { useAuth } from './contexts/AuthContext';
-import { useSubscriptions } from './hooks/useSubscriptions';
+import { useSubscriptions } from './contexts/SubscriptionContext';
 import { useFinancialData } from './hooks/useFinancialData';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
+import { SubscriptionProvider } from './contexts/SubscriptionContext';
+import { ToastProvider } from './contexts/ToastContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import type { Subscription } from './types';
 import { supabase } from './lib/supabase';
@@ -27,7 +29,7 @@ interface LayoutContext {
 
 function HomePage() {
   const { user, loading: authLoading } = useAuth();
-  const { updateSubscription, deleteSubscription, reorderSubscriptions } = useSubscriptions();
+  const { subscriptions, updateSubscription, deleteSubscription, reorderSubscriptions } = useSubscriptions();
   const { 
     fixedExpenses,
     variableExpenses,
@@ -158,7 +160,11 @@ export default function AppWithProviders() {
         <AuthProvider>
           <ThemeProvider>
             <CurrencyProvider>
-              <App />
+              <SubscriptionProvider>
+                <ToastProvider>
+                  <App />
+                </ToastProvider>
+              </SubscriptionProvider>
             </CurrencyProvider>
           </ThemeProvider>
         </AuthProvider>

@@ -4,6 +4,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Star } from 'lucide-react';
 import { SubscriptionCard } from './SubscriptionCard';
 import type { Subscription } from '../types';
+import { useSubscriptions } from '../contexts/SubscriptionContext';
 
 interface Props {
   subscription: Subscription;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function SortableSubscriptionCard({ subscription, onUpdate, onDelete }: Props) {
+  const { toggleFavorite } = useSubscriptions();
   const {
     attributes,
     listeners,
@@ -31,13 +33,10 @@ export function SortableSubscriptionCard({ subscription, onUpdate, onDelete }: P
     position: 'relative' as const
   };
 
-  const handleFavoriteToggle = () => {
+  const handleFavoriteToggle = async () => {
     try {
-      // Send update to server with optimistic update
-      onUpdate({
-        ...subscription,
-        isFavorite: !subscription.isFavorite
-      });
+      // Use the optimistic update function for favorites
+      await toggleFavorite(subscription.id);
     } catch (error) {
       console.error('Error toggling favorite:', error);
     }

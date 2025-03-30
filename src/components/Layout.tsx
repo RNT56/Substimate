@@ -12,7 +12,7 @@ import { PlusCircle, Menu } from 'lucide-react';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { AddSubscriptionModal } from './AddSubscriptionModal';
 import { AuthModal } from './AuthModal';
-import { useSubscriptions } from '../hooks/useSubscriptions';
+import { useSubscriptions } from '../contexts/SubscriptionContext';
 
 export default function Layout() {
   const [isModalOpen, setIsModalOpen] = useState(false);

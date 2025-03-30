@@ -24,6 +24,7 @@ const EXPENSE_CATEGORIES = [
   'Shopping',
   'Education',
   'Savings',
+  'Custom',
   'Other'
 ];
 
@@ -41,6 +42,7 @@ export function ExpenseModal({
   const [name, setName] = useState(expense?.name || '');
   const [amount, setAmount] = useState(expense?.amount?.toString() || '');
   const [category, setCategory] = useState(expense?.category || 'Other');
+  const [customCategory, setCustomCategory] = useState('');
   const [date, setDate] = useState(
     expense && 'date' in expense 
       ? expense.date.split('T')[0] 
@@ -64,7 +66,17 @@ export function ExpenseModal({
     if (expense) {
       setName(expense.name);
       setAmount(expense.amount.toString());
-      setCategory(expense.category);
+      
+      // Check if the category is one of our predefined categories
+      if (EXPENSE_CATEGORIES.includes(expense.category)) {
+        setCategory(expense.category);
+        setCustomCategory('');
+      } else {
+        // If not, it's a custom category
+        setCategory('Custom');
+        setCustomCategory(expense.category);
+      }
+      
       setNotes(expense.notes || '');
 
       if ('date' in expense) {
@@ -84,6 +96,7 @@ export function ExpenseModal({
     setName('');
     setAmount('');
     setCategory('Other');
+    setCustomCategory('');
     setDate(new Date().toISOString().split('T')[0]);
     setDueDate('');
     setFrequency('monthly');
@@ -99,10 +112,13 @@ export function ExpenseModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Use custom category value if "Custom" is selected
+    const finalCategory = category === 'Custom' ? customCategory : category;
+
     const baseExpense = {
       name,
       amount: parseFloat(amount),
-      category,
+      category: finalCategory,
       notes: notes || null
     };
 
@@ -182,6 +198,19 @@ export function ExpenseModal({
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
+                
+                {category === 'Custom' && (
+                  <div className="mt-3">
+                    <input
+                      type="text"
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                      placeholder="Enter custom category"
+                      className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      required
+                    />
+                  </div>
+                )}
               </div>
 
               {type === 'fixed' ? (

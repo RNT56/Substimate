@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { FlowTooltip } from './FlowTooltip';
 import type { Props, Node, Link, PriceHistory } from './types';
+import { SATS_PER_BTC } from '../../lib/constants';
 
 export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpenses, subscriptions }: Props) {
   const { theme } = useTheme();
@@ -408,6 +409,18 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
     }
   };
 
+  // Format BTC values properly for the sankey diagram
+  const formatNodeAmount = (amount: number): string => {
+    if (displayCurrency === 'BTC') {
+      // Convert to satoshis for display
+      const satoshis = Math.round(convertAmount(amount, 'EUR', 'BTC') * SATS_PER_BTC);
+      return `${new Intl.NumberFormat('en-US', {
+        maximumFractionDigits: 0
+      }).format(satoshis)} sats`;
+    }
+    return formatAmount(amount, displayCurrency);
+  };
+
   return (
     <div className="neumorphic-card rounded-xl p-6">
       <div className="flex items-center justify-between mb-8">
@@ -477,7 +490,7 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
                   >
                     {node.name.replace('Fixed: ', '').replace('Variable: ', '').replace('Sub: ', '')}
                     {' '}
-                    ({formatAmount(node.value as number, displayCurrency)})
+                    ({formatNodeAmount(node.value as number)})
                   </text>
                 </g>
               ))}
@@ -514,7 +527,7 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
 
       {(activeLink || (hoveredLink && !stickyTooltip)) && (
         <FlowTooltip
-          link={activeLink || hoveredLink}
+          link={(activeLink || hoveredLink)!}
           mouseX={mousePos.x}
           mouseY={mousePos.y}
           onClose={handleTooltipClose}

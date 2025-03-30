@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useFinancialData } from '../hooks/useFinancialData';
-import { useCurrency } from '../contexts/CurrencyContext';
 import { useSubscriptions } from '../hooks/useSubscriptions';
 import { useFinanceAnalytics } from '../hooks/useFinanceAnalytics';
 import { AssetManagementModal } from '../components/AssetManagementModal';
@@ -14,6 +13,7 @@ import { AssetList } from '../components/finance/AssetList';
 import { TransactionList } from '../components/finance/TransactionList';
 import { ExpenseList } from '../components/finance/ExpenseList';
 import { IncomeList } from '../components/finance/IncomeList';
+import { CategoryDistributionChart } from '../components/finance/CategoryDistributionChart';
 import type { FinancialAsset, AssetTransaction, FixedExpense, VariableExpense, Income } from '../types';
 
 export function FinancePage() {
@@ -32,7 +32,6 @@ export function FinancePage() {
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
 
   // Hooks
-  const { displayCurrency, convertAmount } = useCurrency();
   const { subscriptions } = useSubscriptions();
   const { 
     assets,
@@ -68,7 +67,7 @@ export function FinancePage() {
 
   // Calculate total subscription costs
   const totalSubscriptionCosts = subscriptions.reduce((sum, sub) => {
-    return sum + sub.monthlyCost;
+    return sum + (sub.monthlyCost || 0);
   }, 0);
 
   // Calculate financial metrics
@@ -88,6 +87,36 @@ export function FinancePage() {
   const totalMonthlyExpenses = totalFixedExpenses + totalVariableExpenses + totalSubscriptionCosts;
   const monthlySavings = monthlyIncome - totalMonthlyExpenses;
   const savingsRate = monthlyIncome > 0 ? (monthlySavings / monthlyIncome) * 100 : 0;
+
+  // Handler for editing expenses with proper type narrowing
+  const handleEditFixedExpense = (expense: FixedExpense | VariableExpense) => {
+    if ('dueDate' in expense) {
+      setEditingFixedExpense(expense as FixedExpense);
+    }
+  };
+
+  const handleEditVariableExpense = (expense: FixedExpense | VariableExpense) => {
+    if ('date' in expense) {
+      setEditingVariableExpense(expense as VariableExpense);
+    }
+  };
+
+  // Type-safe wrapper functions for expense updates
+  const handleUpdateFixedExpense = (expense: FixedExpense | VariableExpense) => {
+    if ('dueDate' in expense) {
+      updateFixedExpense(expense);
+    } else {
+      console.error('Attempted to update fixed expense with variable expense data');
+    }
+  };
+
+  const handleUpdateVariableExpense = (expense: FixedExpense | VariableExpense) => {
+    if ('date' in expense) {
+      updateVariableExpense(expense);
+    } else {
+      console.error('Attempted to update variable expense with fixed expense data');
+    }
+  };
 
   if (loading) {
     return (
@@ -124,6 +153,22 @@ export function FinancePage() {
         {/* Monthly Trends */}
         <MonthlyTrendsChart data={monthlyTrendsData} />
 
+        {/* Distribution Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <CategoryDistributionChart 
+            fixedExpenses={fixedExpenses}
+            variableExpenses={variableExpenses}
+            assets={assets}
+            type="expenses"
+          />
+          <CategoryDistributionChart 
+            fixedExpenses={fixedExpenses}
+            variableExpenses={variableExpenses}
+            assets={assets}
+            type="assets"
+          />
+        </div>
+
         {/* Asset List */}
         <AssetList
           assets={assets}
@@ -145,16 +190,16 @@ export function FinancePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ExpenseList
             type="fixed"
-            expenses={fixedExpenses}
+            expenses={fixedExpenses as (FixedExpense | VariableExpense)[]}
             onAdd={() => setIsFixedExpenseModalOpen(true)}
-            onEdit={setEditingFixedExpense}
+            onEdit={handleEditFixedExpense}
             onDelete={deleteFixedExpense}
           />
           <ExpenseList
             type="variable"
-            expenses={variableExpenses}
+            expenses={variableExpenses as (FixedExpense | VariableExpense)[]}
             onAdd={() => setIsVariableExpenseModalOpen(true)}
-            onEdit={setEditingVariableExpense}
+            onEdit={handleEditVariableExpense}
             onDelete={deleteVariableExpense}
           />
         </div>
@@ -200,7 +245,7 @@ export function FinancePage() {
         }}
         onAddFixed={addFixedExpense}
         onAddVariable={addVariableExpense}
-        onUpdate={updateFixedExpense}
+        onUpdate={handleUpdateFixedExpense}
         type="fixed"
         expense={editingFixedExpense}
       />
@@ -213,7 +258,7 @@ export function FinancePage() {
         }}
         onAddFixed={addFixedExpense}
         onAddVariable={addVariableExpense}
-        onUpdate={updateVariableExpense}
+        onUpdate={handleUpdateVariableExpense}
         type="variable"
         expense={editingVariableExpense}
       />

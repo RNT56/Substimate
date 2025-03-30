@@ -1,17 +1,25 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Subscription, PriceChangeOptions } from '../types';
-import { useAuth } from '../contexts/AuthContext';
-import { DEFAULT_CATEGORIES } from '../lib/constants';
+import { useAuth } from './AuthContext';
 
-export function useSubscriptions() {
+interface SubscriptionContextType {
+  subscriptions: Subscription[];
+  loading: boolean;
+  addSubscription: (subscription: Omit<Subscription, 'id'>) => Promise<void>;
+  updateSubscription: (subscription: Subscription, priceChangeOptions?: PriceChangeOptions) => Promise<void>;
+  deleteSubscription: (id: string) => Promise<void>;
+  toggleFavorite: (subscriptionId: string) => Promise<void>;
+  reorderSubscriptions: (reorderedSubscriptions: Subscription[]) => Promise<void>;
+}
+
+const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
+
+export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const optimisticUpdatesRef = useRef<Set<string>>(new Set());
-
-  // Keep track of pending updates to avoid duplicate fetches
-  const pendingUpdateRef = useRef(false);
 
   useEffect(() => {
     if (!user) {
@@ -112,13 +120,18 @@ export function useSubscriptions() {
     name: data.name,
     url: data.url,
     icon: data.icon,
-    monthlyCost: parseFloat(data.monthly_cost),
-    billingPeriod: data.billing_period,
-    paymentMethod: data.payment_method,
-    category: data.category,
-    usageState: data.usage_state,
-    startDate: data.start_date,
-    isFavorite: data.favorite || false
+    monthlyCost: parseFloat(data.monthly_cost) || 0,
+    amount: parseFloat(data.monthly_cost) || 0,
+    currency: data.currency || 'EUR',
+    billingPeriod: data.billing_period || 'monthly',
+    paymentMethod: data.payment_method || 'credit_card',
+    category: data.category || 'Other',
+    usageState: data.usage_state || 'active',
+    startDate: data.start_date || new Date().toISOString().split('T')[0],
+    isFavorite: data.favorite || false,
+    favorite: data.favorite || false,
+    autoRenew: data.auto_renew || false,
+    userId: data.user_id || user?.id || ''
   });
 
   const fetchSubscriptions = async () => {
@@ -131,19 +144,7 @@ export function useSubscriptions() {
 
       if (subsError) throw subsError;
 
-      setSubscriptions(subsData.map(item => ({
-        id: item.id,
-        name: item.name,
-        url: item.url,
-        icon: item.icon,
-        monthlyCost: parseFloat(item.monthly_cost),
-        billingPeriod: item.billing_period,
-        paymentMethod: item.payment_method,
-        category: item.category,
-        usageState: item.usage_state,
-        startDate: item.start_date,
-        isFavorite: item.favorite || false
-      })));
+      setSubscriptions(subsData?.map(item => transformSubscription(item)) || []);
     } catch (error) {
       console.error('Error fetching subscriptions:', error);
     } finally {
@@ -151,6 +152,8 @@ export function useSubscriptions() {
     }
   };
 
+  // Basic update function used by specialized functions
+  // @ts-ignore - Used internally but not exported directly
   const updateSubscription = async (subscription: Subscription) => {
     // Store previous state for rollback
     const previousSubscriptions = [...subscriptions];
@@ -201,15 +204,17 @@ export function useSubscriptions() {
       const subscriptionData = {
         user_id: user?.id,
         name: subscription.name,
-        url: subscription.url,
-        icon: subscription.icon,
-        monthly_cost: subscription.monthlyCost,
-        billing_period: subscription.billingPeriod,
-        payment_method: subscription.paymentMethod,
-        category: subscription.category,
-        usage_state: subscription.usageState,
-        start_date: subscription.startDate,
-        favorite: false // Always start as non-favorite
+        url: subscription.url || '',
+        icon: subscription.icon || '',
+        monthly_cost: subscription.monthlyCost || subscription.amount || 0,
+        billing_period: subscription.billingPeriod || 'monthly',
+        payment_method: subscription.paymentMethod || 'credit_card',
+        category: subscription.category || 'Other',
+        usage_state: subscription.usageState || 'active',
+        start_date: subscription.startDate || new Date().toISOString().split('T')[0],
+        favorite: false, // Always start as non-favorite
+        auto_renew: subscription.autoRenew || false,
+        currency: subscription.currency || 'EUR'
       };
 
       const { data, error: subscriptionError } = await supabase
@@ -226,27 +231,15 @@ export function useSubscriptions() {
         .insert([{
           subscription_id: data.id,
           user_id: user?.id,
-          monthly_cost: subscription.monthlyCost,
-          effective_from: subscription.startDate,
+          monthly_cost: subscription.monthlyCost || subscription.amount || 0,
+          effective_from: subscription.startDate || new Date().toISOString().split('T')[0],
           is_correction: false
         }]);
 
       if (priceHistoryError) throw priceHistoryError;
 
       // Update local state immediately
-      const newSubscription: Subscription = {
-        id: data.id,
-        name: data.name,
-        url: data.url,
-        icon: data.icon,
-        monthlyCost: parseFloat(data.monthly_cost),
-        billingPeriod: data.billing_period,
-        paymentMethod: data.payment_method,
-        category: data.category,
-        usageState: data.usage_state,
-        startDate: data.start_date,
-        isFavorite: false // Ensure local state matches database
-      };
+      const newSubscription: Subscription = transformSubscription(data);
 
       setSubscriptions(prev => [newSubscription, ...prev]);
 
@@ -261,6 +254,14 @@ export function useSubscriptions() {
   const deleteSubscription = async (id: string) => {
     try {
       const previousSubscriptions = [...subscriptions];
+      const subscription = subscriptions.find(s => s.id === id);
+      
+      if (!subscription) {
+        throw new Error('Subscription not found');
+      }
+      
+      // Ask user if they want to keep price history
+      const keepHistory = window.confirm(`Do you want to keep price history for "${subscription.name}" for future calculations?`);
       
       // Add to optimistic updates set
       optimisticUpdatesRef.current.add(id);
@@ -268,13 +269,28 @@ export function useSubscriptions() {
       // Apply optimistic update
       setSubscriptions(prev => prev.filter(sub => sub.id !== id));
 
-      const { error } = await supabase
-        .from('subscriptions')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user?.id);
+      // Delete price history if user doesn't want to keep it
+      if (!keepHistory) {
+        try {
+          await supabase
+            .from('subscription_price_history')
+            .delete()
+            .eq('subscription_id', id)
+            .eq('user_id', user?.id);
+        } catch (historyError) {
+          console.log('Error deleting price history:', historyError);
+          // Continue with subscription deletion even if price history deletion fails
+        }
+      }
+
+      // Now delete the subscription itself - this uses a direct SQL query to avoid trigger issues
+      const { error } = await supabase.rpc('delete_subscription_directly', { 
+        sub_id: id,
+        user_uuid: user?.id 
+      });
 
       if (error) {
+        console.error('Deletion error:', error);
         // If the API call fails, revert the local state
         setSubscriptions(previousSubscriptions);
         optimisticUpdatesRef.current.delete(id);
@@ -417,13 +433,16 @@ export function useSubscriptions() {
     // Store previous state
     const previousSubscriptions = [...subscriptions];
     
+    // Determine current favorite status (check both properties)
+    const isFavorite = subscription.isFavorite || subscription.favorite || false;
+    
     // Track optimistic update
     optimisticUpdatesRef.current.add(subscriptionId);
     
     // Apply optimistic update immediately
     setSubscriptions(prev => 
       prev.map(sub => sub.id === subscriptionId 
-        ? {...sub, isFavorite: !sub.isFavorite} 
+        ? {...sub, isFavorite: !isFavorite, favorite: !isFavorite} 
         : sub
       )
     );
@@ -432,7 +451,7 @@ export function useSubscriptions() {
       // Send to server
       const { error } = await supabase
         .from('subscriptions')
-        .update({ favorite: !subscription.isFavorite })
+        .update({ favorite: !isFavorite })
         .eq('id', subscriptionId)
         .eq('user_id', user?.id);
 
@@ -449,13 +468,25 @@ export function useSubscriptions() {
     }
   };
 
-  return {
-    subscriptions,
-    loading,
-    addSubscription,
-    updateSubscription: updateSubscriptionWithPriceHistory,
-    deleteSubscription,
-    toggleFavorite,
-    reorderSubscriptions
-  };
+  return (
+    <SubscriptionContext.Provider value={{
+      subscriptions,
+      loading,
+      addSubscription,
+      updateSubscription: updateSubscriptionWithPriceHistory,
+      deleteSubscription,
+      toggleFavorite,
+      reorderSubscriptions
+    }}>
+      {children}
+    </SubscriptionContext.Provider>
+  );
 }
+
+export function useSubscriptions() {
+  const context = useContext(SubscriptionContext);
+  if (context === undefined) {
+    throw new Error('useSubscriptions must be used within a SubscriptionProvider');
+  }
+  return context;
+} 

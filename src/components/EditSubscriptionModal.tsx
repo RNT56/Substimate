@@ -1,35 +1,33 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Calendar } from 'lucide-react';
-import type { Subscription, PaymentMethod, BillingPeriod, PriceChangeOptions } from '../types';
-import { predictSubscription, getSubscriptionCategory } from '../utils/subscriptionPredictions';
+import { Loader2 } from 'lucide-react';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useDevice } from '../hooks/useDevice';
 import { DEFAULT_CATEGORIES } from '../lib/constants';
+import { DatePicker } from './DatePicker';
+import type { Subscription, PaymentMethod, BillingPeriod, PriceChangeOptions } from '../types';
 import type { Currency } from '../types';
 
 const PAYMENT_METHODS: PaymentMethod[] = [
-  // Traditional Payment Methods
-  'Credit Card',
-  'Debit Card',
-  'PayPal',
-  'Bank Transfer',
-  'SEPA Direct Debit',
-  // Digital Wallets
-  'Apple Pay',
-  'Google Pay',
-  'Samsung Pay',
-  // Crypto
-  'Bitcoin',
-  'Lightning Network',
-  // Digital Banks
-  'Revolut',
-  'N26',
-  'Wise',
-  'Monzo',
-  'Starling'
+  'credit_card',
+  'debit_card',
+  'paypal',
+  'bank_transfer',
+  'apple_pay',
+  'google_pay',
+  'crypto'
 ];
+
+const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  'credit_card': 'Credit Card',
+  'debit_card': 'Debit Card',
+  'paypal': 'PayPal',
+  'bank_transfer': 'Bank Transfer',
+  'apple_pay': 'Apple Pay',
+  'google_pay': 'Google Pay',
+  'crypto': 'Cryptocurrency'
+};
 
 const CURRENCIES: Currency[] = ['EUR', 'USD', 'BTC'];
 
@@ -43,12 +41,17 @@ interface Props {
 export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription }: Props) {
   const [name, setName] = useState(subscription.name || '');
   const [url, setUrl] = useState(subscription.url || '');
-  const [monthlyCost, setMonthlyCost] = useState(subscription.monthlyCost?.toString() || '0');
+  const [monthlyCost, setMonthlyCost] = useState(
+    (subscription.monthlyCost?.toString() || subscription.amount?.toString() || '0')
+  );
   const [currency, setCurrency] = useState<Currency>('EUR');
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>(subscription.billingPeriod || 'monthly');
-  const [paymentMethod, setPaymentMethod] = useState(subscription.paymentMethod || '');
+  const [paymentMethod, setPaymentMethod] = useState(subscription.paymentMethod || 'credit_card');
   const [category, setCategory] = useState(subscription.category || 'Other');
-  const [startDate, setStartDate] = useState(subscription.startDate?.split('T')[0] || new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(
+    (subscription.startDate?.split('T')[0]) || new Date().toISOString().split('T')[0]
+  );
+  const [submitting, setSubmitting] = useState(false);
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
   const [filteredPaymentMethods, setFilteredPaymentMethods] = useState<string[]>(PAYMENT_METHODS);
@@ -70,11 +73,12 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
   useEffect(() => {
     if (subscription) {
       setName(subscription.name);
-      setUrl(subscription.url);
+      setUrl(subscription.url || '');
       // For yearly billing, show the yearly amount in the cost field
+      const costValue = subscription.monthlyCost || subscription.amount || 0;
       const displayAmount = subscription.billingPeriod === 'yearly' 
-        ? subscription.monthlyCost * 12 
-        : subscription.monthlyCost;
+        ? costValue * 12 
+        : costValue;
       setMonthlyCost(displayAmount.toString());
       setBillingPeriod(subscription.billingPeriod);
       setPaymentMethod(subscription.paymentMethod);
@@ -122,17 +126,22 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
       setLoadingCategories(true);
       setCategoryError(null);
 
-      const { data: categories = [], error } = await supabase
-        .rpc('get_user_categories', { user_id: user?.id });
+      // Instead of using the RPC function, query the subscriptions table directly
+      const { data: subscriptionsData = [], error } = await supabase
+        .from('subscriptions')
+        .select('category')
+        .eq('user_id', user?.id)
+        .not('category', 'is', null)
+        .order('category');
 
       if (error) throw error;
 
       // Start with default categories
-      const allCategories = new Set(DEFAULT_CATEGORIES);
+      const allCategories = new Set([...DEFAULT_CATEGORIES]);
 
       // Add categories from subscriptions
-      categories.forEach(({ category }) => {
-        if (category) allCategories.add(category);
+      subscriptionsData?.forEach(item => {
+        if (item.category) allCategories.add(item.category);
       });
 
       const sortedCategories = Array.from(allCategories).sort();
@@ -141,7 +150,7 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
       console.error('Error loading categories:', error);
       setCategoryError(error instanceof Error ? error.message : 'Failed to load categories');
       // Fallback to default categories
-      setFilteredCategories(DEFAULT_CATEGORIES);
+      setFilteredCategories([...DEFAULT_CATEGORIES]);
     } finally {
       setLoadingCategories(false);
     }
@@ -149,7 +158,7 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
 
   const handlePaymentMethodChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setPaymentMethod(value);
+    setPaymentMethod(value as PaymentMethod);
     
     if (value.length === 0) {
       setFilteredPaymentMethods(PAYMENT_METHODS);
@@ -168,7 +177,7 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
     setCategory(value);
 
     if (value.length === 0) {
-      setFilteredCategories(DEFAULT_CATEGORIES);
+      setFilteredCategories([...DEFAULT_CATEGORIES]);
       setShowCategories(true);
     } else {
       const filtered = filteredCategories.filter(cat => {
@@ -182,7 +191,7 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
   };
 
   const handlePaymentMethodClick = (method: string) => {
-    setPaymentMethod(method);
+    setPaymentMethod(method as PaymentMethod);
     setShowPaymentMethods(false);
   };
 
@@ -194,11 +203,16 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Store current values for rollback
+    // prevent submitting if already in progress
+    if (submitting) return;
+    
+    setSubmitting(true);
+    
+    // Store previous values for potential rollback
     const previousValues = {
       name: subscription.name,
-      url: subscription.url,
-      monthlyCost: subscription.monthlyCost,
+      url: subscription.url || '',
+      monthlyCost: subscription.monthlyCost || subscription.amount || 0,
       billingPeriod: subscription.billingPeriod,
       paymentMethod: subscription.paymentMethod,
       category: subscription.category,
@@ -240,8 +254,11 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
         startDate: new Date(startDate).toISOString()
       };
 
-      await onUpdate(updatedSubscription, priceChangeOpts);
+      // Close modal immediately for better UX
       onClose();
+      
+      // Perform update in background
+      await onUpdate(updatedSubscription, priceChangeOpts);
     } catch (error) {
       console.error('Error updating subscription:', error);
       // Restore previous values on error
@@ -252,6 +269,8 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
       setPaymentMethod(previousValues.paymentMethod);
       setCategory(previousValues.category);
       setStartDate(previousValues.startDate.split('T')[0]);
+      // Reset submitting state
+      setSubmitting(false);
     }
   };
 
@@ -259,9 +278,18 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
 
   return (
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={submitting ? undefined : onClose} />
       <div className="fixed inset-0 flex items-start justify-center p-4 overflow-y-auto">
-        <div className="neumorphic-card rounded-xl p-8 w-full max-w-md mt-8 mb-20">
+        <div className={`neumorphic-card rounded-xl p-8 w-full max-w-md mt-8 mb-20 ${submitting ? 'opacity-70 pointer-events-none' : ''}`}>
+          {submitting && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/10 z-10 rounded-xl">
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="animate-spin text-emerald-500" size={32} />
+                <p className="text-theme-secondary">Updating subscription...</p>
+              </div>
+            </div>
+          )}
+        
           <h2 className="text-2xl font-bold mb-6 text-theme-primary">Edit Subscription</h2>
           
           <form onSubmit={handleSubmit}>
@@ -346,27 +374,31 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
                       <label className="block text-theme-secondary">
                         Price change effective from:
                       </label>
-                      <div className="relative">
-                        <input
-                          type="date"
-                          value={priceChangeOptions.effectiveDate}
-                          onChange={(e) => setPriceChangeOptions(prev => ({
-                            ...prev,
-                            effectiveDate: e.target.value
-                          }))}
-                          min={subscription.startDate.split('T')[0]}
-                          max={new Date().toISOString().split('T')[0]}
-                          className="w-full neumorphic-input rounded-lg pl-10 pr-4 py-2 text-theme-primary"
-                          disabled={priceChangeOptions.applyToHistory}
-                        />
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-secondary" size={16} />
-                      </div>
+                      <DatePicker
+                        value={priceChangeOptions.effectiveDate}
+                        onChange={(value) => setPriceChangeOptions(prev => ({
+                          ...prev,
+                          effectiveDate: value
+                        }))}
+                        min={subscription.startDate.split('T')[0]}
+                        max={new Date().toISOString().split('T')[0]}
+                        disabled={priceChangeOptions.applyToHistory}
+                      />
                     </div>
                   </div>
                 )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-theme-secondary">Start Date</label>
+                  <DatePicker
+                    value={startDate}
+                    onChange={setStartDate}
+                    max={new Date().toISOString().split('T')[0]}
+                    required
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium mb-2 text-theme-secondary">Billing Period</label>
                   <select
@@ -377,16 +409,6 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
                     <option value="monthly">Monthly</option>
                     <option value="yearly">Yearly</option>
                   </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-theme-secondary">Start Date</label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    required
-                  />
                 </div>
               </div>
 
@@ -416,7 +438,7 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
                           onClick={() => handlePaymentMethodClick(method)}
                           className="w-full px-4 py-2 text-left hover:bg-gray-700/50 text-theme-primary transition-colors"
                         >
-                          {method}
+                          {PAYMENT_METHOD_LABELS[method as PaymentMethod]}
                         </button>
                       ))}
                     </div>
@@ -471,21 +493,26 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
               </div>
             </div>
 
-            <div className="flex justify-end gap-4 mt-8">
+            <div className="mt-8 flex justify-end gap-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="neumorphic-button px-6 py-3 rounded-xl text-theme-secondary hover:text-theme-primary"
+                className="neumorphic-button px-6 py-3 rounded-lg text-theme-secondary hover:text-theme-primary transition-colors"
+                disabled={submitting}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className={`neumorphic-button px-6 py-3 rounded-xl ${
-                  isBTC ? 'text-[#f7931a]' : 'text-emerald-400'
-                } hover:opacity-80`}
+                className={`neumorphic-button px-6 py-3 rounded-lg ${isBTC ? 'text-[#f7931a]' : 'text-emerald-500'} hover:opacity-80 transition-opacity flex items-center gap-2`}
+                disabled={submitting}
               >
-                Save Changes
+                {submitting ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} />
+                    Updating...
+                  </>
+                ) : 'Update Subscription'}
               </button>
             </div>
           </form>

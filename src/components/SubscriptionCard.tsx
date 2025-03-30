@@ -104,6 +104,7 @@ const usageStateColors: Record<UsageState, { bg: string, border: string }> = {
 export const SubscriptionCard = memo(function SubscriptionCard({ subscription, onUpdate, onDelete }: Props) {
   // Track local state for optimistic updates
   const [localUsageState, setLocalUsageState] = useState<UsageState>(subscription.usageState);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSelectingIcon, setIsSelectingIcon] = useState(false);
   const Icon = ICONS[subscription.icon as keyof typeof ICONS] || Tv;
@@ -146,10 +147,16 @@ export const SubscriptionCard = memo(function SubscriptionCard({ subscription, o
     }
   }, [subscription, onUpdate]);
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback(async () => {
     try {
-      onDelete(subscription.id);
+      // Set deleting state for UI feedback
+      setIsDeleting(true);
+      
+      // Call delete function
+      await onDelete(subscription.id);
     } catch (error) {
+      // Reset deleting state on error
+      setIsDeleting(false);
       console.error('Error deleting subscription:', error);
     }
   }, [subscription.id, onDelete]);
@@ -160,7 +167,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({ subscription, o
 
   return (
     <>
-      <div className="neumorphic-card rounded-xl overflow-hidden relative">
+      <div className={`neumorphic-card rounded-xl overflow-hidden relative ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}>
         <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${usageStateColors[localUsageState].bg} ${usageStateColors[localUsageState].border}`} />
         
         <div className="p-6">
@@ -231,6 +238,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({ subscription, o
               onClick={() => setIsEditing(true)}
               className={`neumorphic-button px-4 py-2 rounded-lg text-sm ${isBTC ? 'text-[#f7931a]' : 'text-emerald-400'} hover:opacity-80 flex items-center gap-2`}
               type="button"
+              disabled={isDeleting}
             >
               <Pencil size={16} />
               Edit
@@ -239,9 +247,10 @@ export const SubscriptionCard = memo(function SubscriptionCard({ subscription, o
               onClick={handleDelete}
               className="neumorphic-button px-4 py-2 rounded-lg text-sm text-red-500 hover:opacity-80 flex items-center gap-2"
               type="button"
+              disabled={isDeleting}
             >
               <X size={16} />
-              Delete
+              {isDeleting ? 'Deleting...' : 'Delete'}
             </button>
           </div>
         </div>
