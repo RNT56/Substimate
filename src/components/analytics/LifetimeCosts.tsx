@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -19,10 +19,48 @@ interface Props {
 }
 
 export function LifetimeCosts({ data, loading, isMobile }: Props) {
-  const { theme } = useTheme();
+  const { theme, visualStyle } = useTheme();
   const { displayCurrency, formatAmount } = useCurrency();
   const isDark = theme === 'dark';
   const isBTC = displayCurrency === 'BTC';
+  const [chartColors, setChartColors] = useState({ btc: '#f7931a', default: '#8884d8' });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      const computedStyle = getComputedStyle(document.documentElement);
+      const btcColor = computedStyle.getPropertyValue('--chart-color-btc').trim() || '#f7931a';
+      const defaultColor = computedStyle.getPropertyValue('--chart-bar-fill').trim() || '#8884d8';
+      setChartColors({ btc: btcColor, default: defaultColor });
+    }
+  }, [theme, visualStyle]);
+
+  // Calculate max value for dynamic scaling
+  const maxValue = data.length > 0 ? Math.max(...data.map(item => item.totalSpent)) : 0;
+  // Add some padding (e.g., 20% of max value) to the domain max
+  const domainMax = maxValue * 1.2;
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    const currentTheme = theme;
+    const currentStyle = visualStyle;
+    if (active && payload && payload.length) {
+      return (
+        <div 
+          className="themed-tooltip" 
+          data-theme={currentTheme}
+          data-visual-style={currentStyle}
+        >
+          <div className="font-semibold mb-1">{label}</div>
+          <div className="flex justify-between">
+            <span className="text-theme-secondary">Total Spent:</span>
+            <span className={isBTC ? 'text-chart-btc' : 'text-chart-highlight'}>
+              {formatAmount(Number(payload[0].value ?? 0), displayCurrency)}
+            </span>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   if (loading) {
     return (
@@ -62,100 +100,36 @@ export function LifetimeCosts({ data, loading, isMobile }: Props) {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
-      <BarChart 
-        data={data}
-        margin={{ top: 10, right: 30, left: 10, bottom: 60 }}
-      >
-        <defs>
-          <filter id="hover-shadow" height="130%">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
-            <feOffset in="blur" dx="0" dy="1" result="offsetBlur" />
-            <feMerge>
-              <feMergeNode in="offsetBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e2e8f0'} />
-        <XAxis 
-          dataKey="name" 
-          stroke={isDark ? '#9CA3AF' : '#475569'}
-          tick={{ fill: isDark ? '#9CA3AF' : '#475569' }}
-          angle={-45}
-          textAnchor="end"
-          height={60}
-          interval={0}
-        />
-        <YAxis 
-          stroke={isDark ? '#9CA3AF' : '#475569'}
-          tick={{ fill: isDark ? '#9CA3AF' : '#475569' }}
-          tickFormatter={(value) => formatAmount(value, displayCurrency)}
-          width={80}
-        />
-        <Tooltip
-          content={({ active, payload, label }) => {
-            if (!active || !payload?.[0]) return null;
-            const data = payload[0].payload;
-            const startDateFormatted = format(parseISO(data.startDate), 'MMM d, yyyy');
-            const usageStateColors = {
-              active: 'text-emerald-500',
-              'not much': 'text-amber-500',
-              unused: 'text-red-500'
-            };
-
-            return (
-              <div className="p-4 rounded-lg shadow-lg backdrop-blur-md bg-gray-900/95 border border-gray-700">
-                <p className="font-medium text-base mb-2">{label}</p>
-                <div className="space-y-2">
-                  <div className="flex justify-between gap-4">
-                    <span className="text-theme-secondary">Start Date:</span>
-                    <span className="text-theme-primary">{startDateFormatted}</span>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <span className="text-theme-secondary">Months Active:</span>
-                    <span className="text-theme-primary">{data.months}</span>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <span className="text-theme-secondary">Monthly Cost:</span>
-                    <span className="text-emerald-500">
-                      {formatAmount(data.monthlyCost, displayCurrency)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <span className="text-theme-secondary">Total Spent:</span>
-                    <span className="text-emerald-500">
-                      {formatAmount(data.totalSpent, displayCurrency)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <span className="text-theme-secondary">Usage State:</span>
-                    <span className={usageStateColors[data.usageState as keyof typeof usageStateColors]}>
-                      {data.usageState.charAt(0).toUpperCase() + data.usageState.slice(1)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <span className="text-theme-secondary">Billing Period:</span>
-                    <span className="text-theme-primary">
-                      {data.billingPeriod.charAt(0).toUpperCase() + data.billingPeriod.slice(1)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          }}
-          cursor={{ 
-            fill: isDark ? 'rgba(55, 65, 81, 0.8)' : 'rgba(255, 255, 255, 0.8)',
-            filter: 'url(#hover-shadow)'
-          }}
-        />
-        <Bar 
-          dataKey="totalSpent" 
-          name="Total Spent" 
-          fill={isBTC ? '#f7931a' : '#10B981'}
-          radius={[4, 4, 0, 0]}
-        />
-      </BarChart>
-    </ResponsiveContainer>
+    <div className="themed-card p-6 rounded-lg shadow-md overflow-hidden">
+      <h2 className="text-xl font-semibold mb-4 text-theme-primary">Lifetime Costs</h2>
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart data={data} layout="vertical">
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid-color)" />
+          <XAxis
+            type="number"
+            stroke="var(--chart-axis-color)"
+            tick={{ fill: "var(--chart-text-color)" }}
+            tickFormatter={(value) => formatAmount(value, displayCurrency)}
+            domain={[0, domainMax]}
+            allowDataOverflow={true}
+            scale="linear"
+          />
+          <YAxis
+            dataKey="name"
+            type="category"
+            stroke="var(--chart-axis-color)"
+            tick={{ fill: "var(--chart-text-color)" }}
+            width={150}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Bar
+            dataKey="totalSpent"
+            name="Total Spent"
+            fill={isBTC ? chartColors.btc : chartColors.default}
+            radius={[0, 4, 4, 0]}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }

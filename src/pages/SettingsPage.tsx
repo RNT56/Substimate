@@ -1,11 +1,11 @@
 import React from 'react';
 import { Settings, Upload, Database, Bell, Shield, Palette } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme, visualStyles as globalVisualStyles, VisualStyle } from '../contexts/ThemeContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 
 export function SettingsPage() {
-  const { theme, toggleTheme } = useTheme();
-  const { displayCurrency, setDisplayCurrency } = useCurrency();
+  const { theme, toggleTheme, visualStyle, setVisualStyle } = useTheme();
+  const { displayCurrency } = useCurrency();
   const isDark = theme === 'dark';
   const isBTC = displayCurrency === 'BTC';
 
@@ -21,10 +21,39 @@ export function SettingsPage() {
           control: (
             <button
               onClick={toggleTheme}
-              className="neumorphic-button px-4 py-2 rounded-lg text-theme-secondary hover:text-theme-primary"
+              className="themed-button px-4 py-2 rounded-lg text-theme-secondary hover:text-theme-primary"
             >
               {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
             </button>
+          )
+        },
+        {
+          name: 'Visual Style',
+          description: 'Select the visual appearance',
+          control: (
+            <div className="flex flex-wrap gap-2">
+              {globalVisualStyles.map((style) => {
+                const isActive = visualStyle === style;
+                const activeClasses = isBTC
+                  ? 'text-[#f7931a] border-highlight'
+                  : 'text-emerald-400 border-highlight';
+                const inactiveClasses =
+                  'text-theme-secondary hover:text-theme-primary border-transparent';
+                const buttonClasses = `themed-button px-3 py-1.5 rounded-lg text-sm border ${
+                  isActive ? activeClasses : inactiveClasses
+                }`;
+
+                return (
+                  <button
+                    key={style}
+                    onClick={() => setVisualStyle(style)}
+                    className={buttonClasses}
+                  >
+                    {style.charAt(0).toUpperCase() + style.slice(1)}
+                  </button>
+                );
+              })}
+            </div>
           )
         }
       ]
@@ -40,7 +69,7 @@ export function SettingsPage() {
           control: (
             <button
               onClick={() => {}}
-              className={`neumorphic-button px-4 py-2 rounded-lg ${
+              className={`themed-button px-4 py-2 rounded-lg ${
                 isBTC ? 'text-[#f7931a]' : 'text-emerald-400'
               } hover:opacity-80`}
             >
@@ -93,7 +122,7 @@ export function SettingsPage() {
           control: (
             <button
               onClick={() => {}}
-              className="neumorphic-button px-4 py-2 rounded-lg text-theme-secondary hover:text-theme-primary"
+              className="themed-button px-4 py-2 rounded-lg text-theme-secondary hover:text-theme-primary"
             >
               Enable
             </button>
@@ -112,7 +141,7 @@ export function SettingsPage() {
 
       <div className="space-y-6">
         {sections.map((section) => (
-          <div key={section.title} className="neumorphic-card rounded-xl p-6">
+          <div key={section.title} className="themed-card rounded-xl p-6">
             <div className="flex items-center gap-4 mb-6">
               <div className={`p-3 rounded-lg ${isBTC ? 'bg-[#f7931a]/10' : 'bg-emerald-500/10'}`}>
                 <section.icon 

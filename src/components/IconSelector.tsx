@@ -121,12 +121,12 @@ export function IconSelector({ isOpen, onClose, onSelect, currentIcon }: Props) 
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
-        <div className="neumorphic-card rounded-xl p-6 w-full max-w-4xl max-h-[80vh] overflow-hidden pointer-events-auto">
+        <div className="themed-card rounded-xl p-6 w-full max-w-4xl max-h-[80vh] overflow-hidden pointer-events-auto">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-semibold text-theme-primary">Select Icon</h3>
             <button
               onClick={onClose}
-              className="neumorphic-button px-4 py-2 rounded-lg text-theme-secondary hover:text-theme-primary"
+              className="themed-button px-4 py-2 rounded-lg text-theme-secondary hover:text-theme-primary"
             >
               Close
             </button>
@@ -145,7 +145,7 @@ export function IconSelector({ isOpen, onClose, onSelect, currentIcon }: Props) 
                           onSelect(name);
                           onClose();
                         }}
-                        className={`neumorphic-button p-3 rounded-lg hover:text-emerald-400 transition-all ${
+                        className={`themed-button p-3 rounded-lg hover:text-emerald-400 transition-all ${
                           currentIcon === name ? 'text-emerald-400' : 'text-theme-secondary'
                         }`}
                         title={name}

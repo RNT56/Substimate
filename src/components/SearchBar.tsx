@@ -40,7 +40,7 @@ export function SearchBar({ onSearch }: Props) {
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Search subscriptions..."
-          className={`w-full neumorphic-input rounded-lg pl-10 pr-10 py-2.5 text-theme-primary focus:outline-none focus:ring-2 ${
+          className={`w-full themed-input search-bar-input rounded-lg pl-10 pr-10 py-2.5 text-theme-primary focus:outline-none focus:ring-2 ${
             isBTC ? 'focus:ring-[#f7931a]' : 'focus:ring-emerald-500'
           }`}
         />

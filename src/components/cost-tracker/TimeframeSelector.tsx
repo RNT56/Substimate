@@ -26,7 +26,7 @@ export function TimeframeSelector({ timeframe, selectedDate, onTimeframeChange, 
             type="date"
             value={format(selectedDate, 'yyyy-MM-dd')}
             onChange={(e) => onDateChange(new Date(e.target.value))}
-            className="neumorphic-input rounded-lg pl-10 pr-4 py-2 text-theme-primary"
+            className="themed-input rounded-lg pl-10 pr-4 py-2 text-theme-primary"
           />
           <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-secondary" size={16} />
         </div>

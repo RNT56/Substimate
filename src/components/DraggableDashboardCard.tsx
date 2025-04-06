@@ -28,7 +28,7 @@ export function DraggableDashboardCard({ id, children }: Props) {
 
   return (
     <div ref={setNodeRef} style={style} className="h-full">
-      <div className="neumorphic-card rounded-xl h-full relative overflow-hidden">
+      <div className="themed-card rounded-xl h-full relative overflow-hidden">
         <div 
           {...attributes} 
           {...listeners}

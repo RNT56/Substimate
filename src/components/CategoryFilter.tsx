@@ -61,7 +61,7 @@ export function CategoryFilter({ selectedCategory, onSelectCategory, subscriptio
         >
           <button
             onClick={() => onSelectCategory(category)}
-            className={`neumorphic-button px-4 py-2 rounded-lg text-sm transition-all ${
+            className={`themed-button px-4 py-2 rounded-lg text-sm transition-all ${
               selectedCategory === category
                 ? isBTC ? 'text-[#f7931a]' : 'text-emerald-400'
                 : 'text-gray-400 hover:text-gray-300'

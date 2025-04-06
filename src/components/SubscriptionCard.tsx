@@ -44,10 +44,14 @@ import {
   // Action Icons
   Pencil, X
 } from 'lucide-react';
-import type { Subscription, UsageState } from '../types';
+import type { Subscription } from '../types';
 import { EditSubscriptionModal } from './EditSubscriptionModal';
 import { IconSelector } from './IconSelector';
 import { useCurrency } from '../contexts/CurrencyContext';
+import { useSubscriptions } from '../contexts/SubscriptionContext';
+
+// Define UsageState type
+type UsageState = 'active' | 'not much' | 'unused';
 
 const ICONS = {
   // Media & Entertainment
@@ -92,32 +96,36 @@ const ICONS = {
 interface Props {
   subscription: Subscription;
   onUpdate: (subscription: Subscription) => void;
-  onDelete: (id: string) => void;
 }
 
+// Remove UsageState type and related code
+const defaultUsageState: UsageState = 'active'; // Use the defined type
+
+// Use string for keys, handle potential undefined
 const usageStateColors: Record<UsageState, { bg: string, border: string }> = {
   active: { bg: 'bg-emerald-500', border: 'border-emerald-600' },
-  'not much': { bg: 'bg-amber-500', border: 'border-amber-600' },
-  unused: { bg: 'bg-red-500', border: 'border-red-600' }
+  'not much': { bg: 'bg-amber-500', border: 'border-amber-600' }, // Use UsageState type keys
+  unused: { bg: 'bg-red-500', border: 'border-red-600' }      // Use UsageState type keys
 };
 
-export const SubscriptionCard = memo(function SubscriptionCard({ subscription, onUpdate, onDelete }: Props) {
-  // Track local state for optimistic updates
-  const [localUsageState, setLocalUsageState] = useState<UsageState>(subscription.usageState);
-  const [isDeleting, setIsDeleting] = useState(false);
+export const SubscriptionCard = memo(function SubscriptionCard({ subscription, onUpdate }: Props) {
+  // State should be string | undefined, provide default
+  const [localUsageState, setLocalUsageState] = useState<UsageState>(subscription.usageState as UsageState || defaultUsageState); // Use UsageState type
   const [isEditing, setIsEditing] = useState(false);
   const [isSelectingIcon, setIsSelectingIcon] = useState(false);
   const Icon = ICONS[subscription.icon as keyof typeof ICONS] || Tv;
   const { displayCurrency, convertAmount, formatAmount } = useCurrency();
   const isBTC = displayCurrency === 'BTC';
+  const { triggerDeleteConfirmation } = useSubscriptions();
 
-  // Update local state when subscription changes
+  // Update local state when subscription changes, provide default
   useEffect(() => {
-    setLocalUsageState(subscription.usageState);
+    setLocalUsageState((subscription.usageState as UsageState) || defaultUsageState); // Cast and use default
   }, [subscription.usageState]);
 
   // Memoize handlers to prevent unnecessary re-renders
-  const handleUsageStateChange = useCallback((usageState: UsageState) => {
+  // Handler parameter should accept string
+  const handleUsageStateChange = useCallback((usageState: UsageState) => { // Use UsageState type
     try {
       // Update local state immediately for optimistic UI
       setLocalUsageState(usageState);
@@ -129,8 +137,8 @@ export const SubscriptionCard = memo(function SubscriptionCard({ subscription, o
       });
     } catch (error) {
       console.error('Error updating usage state:', error);
-      // Revert local state on error
-      setLocalUsageState(subscription.usageState);
+      // Revert local state on error, provide default
+      setLocalUsageState((subscription.usageState as UsageState) || defaultUsageState); // Cast and use default
     }
   }, [subscription, onUpdate]);
 
@@ -147,27 +155,14 @@ export const SubscriptionCard = memo(function SubscriptionCard({ subscription, o
     }
   }, [subscription, onUpdate]);
 
-  const handleDelete = useCallback(async () => {
-    try {
-      // Set deleting state for UI feedback
-      setIsDeleting(true);
-      
-      // Call delete function
-      await onDelete(subscription.id);
-    } catch (error) {
-      // Reset deleting state on error
-      setIsDeleting(false);
-      console.error('Error deleting subscription:', error);
-    }
-  }, [subscription.id, onDelete]);
-
-  const convertedMonthlyCost = convertAmount(subscription.monthlyCost, 'EUR', displayCurrency);
+  // Use a fallback for potentially undefined monthlyCost
+  const convertedMonthlyCost = convertAmount(subscription.monthlyCost || 0, 'EUR', displayCurrency);
   const formattedCost = formatAmount(convertedMonthlyCost, displayCurrency);
 
 
   return (
     <>
-      <div className={`neumorphic-card rounded-xl overflow-hidden relative ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}>
+      <div className={`themed-card rounded-xl overflow-hidden relative`}>
         <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${usageStateColors[localUsageState].bg} ${usageStateColors[localUsageState].border}`} />
         
         <div className="p-6">
@@ -175,7 +170,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({ subscription, o
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setIsSelectingIcon(true)}
-                className="icon-container"
+                className="themed-icon-container"
                 title="Click to change icon"
                 type="button"
               >
@@ -200,7 +195,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({ subscription, o
           <div className="flex gap-2 mb-4">
             <button
               onClick={() => handleUsageStateChange('active')}
-              className={`neumorphic-button px-4 py-2 rounded-lg text-sm transition-all ${
+              className={`themed-button px-4 py-2 rounded-lg text-sm transition-all ${
                 localUsageState === 'active'
                   ? isBTC ? 'text-[#f7931a]' : 'text-emerald-500'
                   : 'text-theme-secondary hover:text-theme-primary'
@@ -211,7 +206,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({ subscription, o
             </button>
             <button
               onClick={() => handleUsageStateChange('not much')}
-              className={`neumorphic-button px-4 py-2 rounded-lg text-sm transition-all ${
+              className={`themed-button px-4 py-2 rounded-lg text-sm transition-all ${
                 localUsageState === 'not much' 
                   ? 'text-amber-500' 
                   : 'text-theme-secondary hover:text-theme-primary'
@@ -222,7 +217,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({ subscription, o
             </button>
             <button
               onClick={() => handleUsageStateChange('unused')}
-              className={`neumorphic-button px-4 py-2 rounded-lg text-sm transition-all ${
+              className={`themed-button px-4 py-2 rounded-lg text-sm transition-all ${
                 localUsageState === 'unused' 
                   ? 'text-red-500' 
                   : 'text-theme-secondary hover:text-theme-primary'
@@ -236,21 +231,19 @@ export const SubscriptionCard = memo(function SubscriptionCard({ subscription, o
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setIsEditing(true)}
-              className={`neumorphic-button px-4 py-2 rounded-lg text-sm ${isBTC ? 'text-[#f7931a]' : 'text-emerald-400'} hover:opacity-80 flex items-center gap-2`}
+              className={`themed-button px-4 py-2 rounded-lg text-sm ${isBTC ? 'text-[#f7931a]' : 'text-emerald-400'} hover:opacity-80 flex items-center gap-2`}
               type="button"
-              disabled={isDeleting}
             >
               <Pencil size={16} />
               Edit
             </button>
             <button
-              onClick={handleDelete}
-              className="neumorphic-button px-4 py-2 rounded-lg text-sm text-red-500 hover:opacity-80 flex items-center gap-2"
+              onClick={() => triggerDeleteConfirmation(subscription.id)}
+              className="themed-button px-4 py-2 rounded-lg text-sm text-red-500 hover:opacity-80 flex items-center gap-2"
               type="button"
-              disabled={isDeleting}
             >
               <X size={16} />
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              Delete
             </button>
           </div>
         </div>
@@ -267,7 +260,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({ subscription, o
         isOpen={isSelectingIcon}
         onClose={() => setIsSelectingIcon(false)}
         onSelect={handleIconChange}
-        currentIcon={subscription.icon}
+        currentIcon={subscription.icon || 'Tv'} // Provide fallback icon
       />
     </>
   );

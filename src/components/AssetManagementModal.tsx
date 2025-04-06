@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
-import type { FinancialAsset, AssetType } from '../types';
+import type { FinancialAsset } from '../types';
 import { useCurrency } from '../contexts/CurrencyContext';
 
 interface Props {
@@ -11,18 +11,18 @@ interface Props {
   asset?: FinancialAsset | null;
 }
 
-const ASSET_TYPES: AssetType[] = ['stock', 'crypto', 'savings', 'real_estate', 'other'];
+const ASSET_TYPES: string[] = ['stock', 'crypto', 'savings', 'real_estate', 'other'];
 
 export function AssetManagementModal({ isOpen, onClose, onAdd, onUpdate, asset }: Props) {
   // Initialize state with asset data if editing
   const [name, setName] = useState(asset?.name || '');
-  const [type, setType] = useState<AssetType>(asset?.type || 'stock');
+  const [type, setType] = useState<string>(asset?.type || 'stock');
   const [quantity, setQuantity] = useState(asset?.quantity?.toString() || '');
   const [purchasePrice, setPurchasePrice] = useState(asset?.purchasePrice?.toString() || '');
   const [purchaseDate, setPurchaseDate] = useState(
     asset?.purchaseDate?.split('T')[0] || new Date().toISOString().split('T')[0]
   );
-  const [notes, setNotes] = useState(asset?.notes || '');
+  const [notes, setNotes] = useState<string | undefined>(asset?.notes);
 
   // Reset form when asset prop changes
   useEffect(() => {
@@ -32,7 +32,7 @@ export function AssetManagementModal({ isOpen, onClose, onAdd, onUpdate, asset }
       setQuantity(asset.quantity?.toString() || '');
       setPurchasePrice(asset.purchasePrice?.toString() || '');
       setPurchaseDate(asset.purchaseDate?.split('T')[0] || '');
-      setNotes(asset.notes || '');
+      setNotes(asset.notes);
     } else {
       // Reset form for new asset
       setName('');
@@ -40,7 +40,7 @@ export function AssetManagementModal({ isOpen, onClose, onAdd, onUpdate, asset }
       setQuantity('');
       setPurchasePrice('');
       setPurchaseDate(new Date().toISOString().split('T')[0]);
-      setNotes('');
+      setNotes(undefined);
     }
   }, [asset]);
 
@@ -90,7 +90,7 @@ export function AssetManagementModal({ isOpen, onClose, onAdd, onUpdate, asset }
       purchasePrice: price,
       purchaseDate: new Date(purchaseDate).toISOString(),
       currentPrice: price, // Initially set to purchase price, will be updated via API
-      notes: notes || null
+      notes: notes || undefined // Ensure notes is string or undefined
     };
 
     if (asset && onUpdate) {
@@ -111,7 +111,7 @@ export function AssetManagementModal({ isOpen, onClose, onAdd, onUpdate, asset }
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 flex items-start justify-center p-4 overflow-y-auto">
-        <div className="neumorphic-card rounded-xl p-8 w-full max-w-md mt-8 mb-20">
+        <div className="themed-card rounded-xl p-8 w-full max-w-md mt-8 mb-20">
           <h2 className="text-2xl font-bold mb-6 text-theme-primary">
             {asset ? 'Edit Asset' : 'Add New Asset'}
           </h2>
@@ -124,7 +124,7 @@ export function AssetManagementModal({ isOpen, onClose, onAdd, onUpdate, asset }
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   required
                 />
               </div>
@@ -133,12 +133,12 @@ export function AssetManagementModal({ isOpen, onClose, onAdd, onUpdate, asset }
                 <label className="block text-sm font-medium mb-2 text-theme-secondary">Type</label>
                 <select
                   value={type}
-                  onChange={(e) => setType(e.target.value as AssetType)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  onChange={(e) => setType(e.target.value)}
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
                   {ASSET_TYPES.map(type => (
                     <option key={type} value={type}>
-                      {type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                      {type.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                     </option>
                   ))}
                 </select>
@@ -151,7 +151,7 @@ export function AssetManagementModal({ isOpen, onClose, onAdd, onUpdate, asset }
                   step="0.00000001"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   required
                 />
               </div>
@@ -163,7 +163,7 @@ export function AssetManagementModal({ isOpen, onClose, onAdd, onUpdate, asset }
                   step="0.01"
                   value={purchasePrice}
                   onChange={(e) => setPurchasePrice(e.target.value)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   required
                 />
               </div>
@@ -174,7 +174,7 @@ export function AssetManagementModal({ isOpen, onClose, onAdd, onUpdate, asset }
                   type="date"
                   value={purchaseDate}
                   onChange={(e) => setPurchaseDate(e.target.value)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   required
                 />
               </div>
@@ -182,9 +182,9 @@ export function AssetManagementModal({ isOpen, onClose, onAdd, onUpdate, asset }
               <div>
                 <label className="block text-sm font-medium mb-2 text-theme-secondary">Notes</label>
                 <textarea
-                  value={notes}
+                  value={notes || ''}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   rows={3}
                   placeholder="Optional notes about this asset"
                 />
@@ -195,13 +195,13 @@ export function AssetManagementModal({ isOpen, onClose, onAdd, onUpdate, asset }
               <button
                 type="button"
                 onClick={onClose}
-                className="neumorphic-button px-6 py-3 rounded-xl text-theme-secondary hover:text-theme-primary"
+                className="themed-button px-6 py-3 rounded-xl text-theme-secondary hover:text-theme-primary"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className={`neumorphic-button px-6 py-3 rounded-xl flex items-center gap-2 ${
+                className={`themed-button px-6 py-3 rounded-xl flex items-center gap-2 ${
                   isBTC ? 'text-[#f7931a]' : 'text-emerald-400'
                 } hover:opacity-80`}
               >

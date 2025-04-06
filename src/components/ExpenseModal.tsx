@@ -157,7 +157,7 @@ export function ExpenseModal({
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 flex items-start justify-center p-4 overflow-y-auto">
-        <div className="neumorphic-card rounded-xl p-8 w-full max-w-md mt-8 mb-20">
+        <div className="themed-card rounded-xl p-8 w-full max-w-md mt-8 mb-20">
           <h2 className="text-2xl font-bold mb-6 text-theme-primary">
             {expense ? 'Edit' : 'Add'} {type === 'fixed' ? 'Fixed' : 'Variable'} Expense
           </h2>
@@ -170,7 +170,7 @@ export function ExpenseModal({
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   required
                 />
               </div>
@@ -182,7 +182,7 @@ export function ExpenseModal({
                   step="0.01"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   required
                 />
               </div>
@@ -192,7 +192,7 @@ export function ExpenseModal({
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
                   {EXPENSE_CATEGORIES.map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
@@ -206,7 +206,7 @@ export function ExpenseModal({
                       value={customCategory}
                       onChange={(e) => setCustomCategory(e.target.value)}
                       placeholder="Enter custom category"
-                      className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       required
                     />
                   </div>
@@ -221,7 +221,7 @@ export function ExpenseModal({
                       type="date"
                       value={dueDate}
                       onChange={(e) => setDueDate(e.target.value)}
-                      className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     />
                   </div>
 
@@ -230,7 +230,7 @@ export function ExpenseModal({
                     <select
                       value={frequency}
                       onChange={(e) => setFrequency(e.target.value as typeof FREQUENCIES[number])}
-                      className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     >
                       {FREQUENCIES.map(freq => (
                         <option key={freq} value={freq}>
@@ -260,7 +260,7 @@ export function ExpenseModal({
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     required
                   />
                 </div>
@@ -271,7 +271,7 @@ export function ExpenseModal({
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   rows={3}
                 />
               </div>
@@ -281,13 +281,13 @@ export function ExpenseModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="neumorphic-button px-6 py-3 rounded-xl text-theme-secondary hover:text-theme-primary"
+                className="themed-button px-6 py-3 rounded-xl text-theme-secondary hover:text-theme-primary"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className={`neumorphic-button px-6 py-3 rounded-xl flex items-center gap-2 ${
+                className={`themed-button px-6 py-3 rounded-xl flex items-center gap-2 ${
                   isBTC ? 'text-[#f7931a]' : 'text-emerald-400'
                 } hover:opacity-80`}
               >

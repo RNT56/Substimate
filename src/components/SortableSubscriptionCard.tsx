@@ -9,10 +9,9 @@ import { useSubscriptions } from '../contexts/SubscriptionContext';
 interface Props {
   subscription: Subscription;
   onUpdate: (subscription: Subscription) => void;
-  onDelete: (id: string) => void;
 }
 
-export function SortableSubscriptionCard({ subscription, onUpdate, onDelete }: Props) {
+export function SortableSubscriptionCard({ subscription, onUpdate }: Props) {
   const { toggleFavorite } = useSubscriptions();
   const {
     attributes,
@@ -66,7 +65,6 @@ export function SortableSubscriptionCard({ subscription, onUpdate, onDelete }: P
       <SubscriptionCard
         subscription={subscription}
         onUpdate={onUpdate}
-        onDelete={onDelete}
       />
     </div>
   );

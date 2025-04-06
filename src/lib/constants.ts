@@ -5,10 +5,10 @@ export const SATS_PER_BTC = 100000000; // 1 BTC = 100,000,000 satoshis
 export const EXCHANGE_RATE_UPDATE_INTERVAL = 3600000; // 1 hour in milliseconds
 
 // Protected categories that cannot be deleted
-export const PROTECTED_CATEGORIES = ['All', 'Favorites', 'Other'] as const;
+export const PROTECTED_CATEGORIES: string[] = ['All', 'Favorites', 'Other'];
 
 // Default categories
-export const DEFAULT_CATEGORIES = [
+export const DEFAULT_CATEGORIES: string[] = [
   'AI Chat',
   'Coding',
   'Diffusion',
@@ -27,4 +27,4 @@ export const DEFAULT_CATEGORIES = [
   'Creative',
   'Social',
   'Other'
-] as const;
+];

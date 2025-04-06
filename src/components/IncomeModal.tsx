@@ -22,7 +22,7 @@ export function IncomeModal({ isOpen, onClose, onAdd, onUpdate, income }: Props)
   const [nextPayment, setNextPayment] = useState(
     income?.nextPayment?.split('T')[0] || ''
   );
-  const [notes, setNotes] = useState(income?.notes || '');
+  const [notes, setNotes] = useState<string | undefined>(income?.notes ?? undefined);
   const [isRecurring, setIsRecurring] = useState(true);
 
   // Reset form when income prop changes
@@ -32,7 +32,7 @@ export function IncomeModal({ isOpen, onClose, onAdd, onUpdate, income }: Props)
       setAmount(income.amount.toString());
       setFrequency(income.frequency);
       setNextPayment(income.nextPayment?.split('T')[0] || '');
-      setNotes(income.notes || '');
+      setNotes(income.notes ?? undefined);
       setIsRecurring(income.frequency !== 'one_time');
     } else {
       resetForm();
@@ -44,7 +44,7 @@ export function IncomeModal({ isOpen, onClose, onAdd, onUpdate, income }: Props)
     setAmount('');
     setFrequency('monthly');
     setNextPayment('');
-    setNotes('');
+    setNotes(undefined);
     setIsRecurring(true);
   };
 
@@ -57,11 +57,12 @@ export function IncomeModal({ isOpen, onClose, onAdd, onUpdate, income }: Props)
     e.preventDefault();
 
     const incomeData = {
+      name: source,
       source,
       amount: parseFloat(amount),
       frequency: isRecurring ? frequency : 'one_time',
-      nextPayment: nextPayment ? new Date(nextPayment).toISOString() : null,
-      notes: notes || null
+      nextPayment: nextPayment ? new Date(nextPayment).toISOString() : undefined,
+      notes: notes || undefined
     };
 
     if (income && onUpdate) {
@@ -78,7 +79,7 @@ export function IncomeModal({ isOpen, onClose, onAdd, onUpdate, income }: Props)
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 flex items-start justify-center p-4 overflow-y-auto">
-        <div className="neumorphic-card rounded-xl p-8 w-full max-w-md mt-8 mb-20">
+        <div className="themed-card rounded-xl p-8 w-full max-w-md mt-8 mb-20">
           <h2 className="text-2xl font-bold mb-6 text-theme-primary">
             {income ? 'Edit' : 'Add'} Income Source
           </h2>
@@ -91,7 +92,7 @@ export function IncomeModal({ isOpen, onClose, onAdd, onUpdate, income }: Props)
                   type="text"
                   value={source}
                   onChange={(e) => setSource(e.target.value)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   required
                   placeholder="e.g., Salary, Freelance, Investments"
                 />
@@ -104,7 +105,7 @@ export function IncomeModal({ isOpen, onClose, onAdd, onUpdate, income }: Props)
                   step="0.01"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   required
                 />
               </div>
@@ -128,7 +129,7 @@ export function IncomeModal({ isOpen, onClose, onAdd, onUpdate, income }: Props)
                   <select
                     value={frequency}
                     onChange={(e) => setFrequency(e.target.value as typeof FREQUENCIES[number])}
-                    className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   >
                     {FREQUENCIES.filter(freq => freq !== 'one_time').map(freq => (
                       <option key={freq} value={freq}>
@@ -145,16 +146,16 @@ export function IncomeModal({ isOpen, onClose, onAdd, onUpdate, income }: Props)
                   type="date"
                   value={nextPayment}
                   onChange={(e) => setNextPayment(e.target.value)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-2 text-theme-secondary">Notes</label>
                 <textarea
-                  value={notes}
+                  value={notes || ''}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   rows={3}
                   placeholder="Add any additional details about this income source"
                 />
@@ -165,13 +166,13 @@ export function IncomeModal({ isOpen, onClose, onAdd, onUpdate, income }: Props)
               <button
                 type="button"
                 onClick={onClose}
-                className="neumorphic-button px-6 py-3 rounded-xl text-theme-secondary hover:text-theme-primary"
+                className="themed-button px-6 py-3 rounded-xl text-theme-secondary hover:text-theme-primary"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className={`neumorphic-button px-6 py-3 rounded-xl flex items-center gap-2 ${
+                className={`themed-button px-6 py-3 rounded-xl flex items-center gap-2 ${
                   isBTC ? 'text-[#f7931a]' : 'text-emerald-400'
                 } hover:opacity-80`}
               >

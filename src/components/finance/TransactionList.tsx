@@ -19,12 +19,12 @@ export function TransactionList({ transactions, assets, onAdd, onEdit, onDelete 
 
   if (transactions.length === 0) {
     return (
-      <div className="neumorphic-card rounded-xl p-6">
+      <div className="themed-card rounded-xl p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-theme-primary">Transactions</h2>
           <button
             onClick={onAdd}
-            className={`neumorphic-button px-4 py-2 rounded-lg ${
+            className={`themed-button px-4 py-2 rounded-lg ${
               isBTC ? 'text-[#f7931a]' : 'text-emerald-400'
             } hover:opacity-80 flex items-center gap-2`}
           >
@@ -38,12 +38,12 @@ export function TransactionList({ transactions, assets, onAdd, onEdit, onDelete 
   }
 
   return (
-    <div className="neumorphic-card rounded-xl p-6">
+    <div className="themed-card rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-theme-primary">Transactions</h2>
         <button
           onClick={onAdd}
-          className={`neumorphic-button px-4 py-2 rounded-lg ${
+          className={`themed-button px-4 py-2 rounded-lg ${
             isBTC ? 'text-[#f7931a]' : 'text-emerald-400'
           } hover:opacity-80 flex items-center gap-2`}
         >

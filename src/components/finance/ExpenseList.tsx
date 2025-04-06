@@ -21,7 +21,7 @@ export function ExpenseList({ type, expenses, onAdd, onEdit, onDelete }: Props) 
   const isDark = theme === 'dark';
 
   return (
-    <div className="neumorphic-card rounded-xl p-6">
+    <div className="themed-card rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-theme-primary">
           {type === 'fixed' ? 'Fixed' : 'Variable'} Expenses

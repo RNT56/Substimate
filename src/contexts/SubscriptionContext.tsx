@@ -2,15 +2,20 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { supabase } from '../lib/supabase';
 import type { Subscription, PriceChangeOptions } from '../types';
 import { useAuth } from './AuthContext';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 
 interface SubscriptionContextType {
   subscriptions: Subscription[];
   loading: boolean;
   addSubscription: (subscription: Omit<Subscription, 'id'>) => Promise<void>;
   updateSubscription: (subscription: Subscription, priceChangeOptions?: PriceChangeOptions) => Promise<void>;
-  deleteSubscription: (id: string) => Promise<void>;
+  triggerDeleteConfirmation: (id: string) => void;
+  confirmDeleteSubscription: (keepHistory: boolean) => Promise<void>;
   toggleFavorite: (subscriptionId: string) => Promise<void>;
   reorderSubscriptions: (reorderedSubscriptions: Subscription[]) => Promise<void>;
+  isConfirmDeleteOpen: boolean;
+  subscriptionToDelete: Subscription | null;
+  closeConfirmDeleteModal: () => void;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -20,6 +25,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const optimisticUpdatesRef = useRef<Set<string>>(new Set());
+  const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+  const [subscriptionToDelete, setSubscriptionToDelete] = useState<Subscription | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -251,24 +258,42 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  const deleteSubscription = async (id: string) => {
+  const triggerDeleteConfirmation = (id: string) => {
+    const subscription = subscriptions.find(s => s.id === id);
+    if (subscription) {
+      setSubscriptionToDelete(subscription);
+      setIsConfirmDeleteOpen(true);
+    } else {
+      console.error('Subscription not found for deletion:', id);
+      // Handle error appropriately, maybe show a notification
+    }
+  };
+
+  const closeConfirmDeleteModal = () => {
+    setIsConfirmDeleteOpen(false);
+    setSubscriptionToDelete(null);
+  };
+
+  const confirmDeleteSubscription = async (keepHistory: boolean) => {
+    if (!subscriptionToDelete || !user) {
+      console.error('No subscription selected for deletion or user not logged in.');
+      closeConfirmDeleteModal(); // Close modal even if error occurs
+      return; // Exit if no subscription is targeted
+    }
+
+    const id = subscriptionToDelete.id;
+    const previousSubscriptions = [...subscriptions];
+
+    // Add to optimistic updates set
+    optimisticUpdatesRef.current.add(id);
+
+    // Apply optimistic update
+    setSubscriptions(prev => prev.filter(sub => sub.id !== id));
+    
+    // Close the modal immediately
+    closeConfirmDeleteModal(); 
+
     try {
-      const previousSubscriptions = [...subscriptions];
-      const subscription = subscriptions.find(s => s.id === id);
-      
-      if (!subscription) {
-        throw new Error('Subscription not found');
-      }
-      
-      // Ask user if they want to keep price history
-      const keepHistory = window.confirm(`Do you want to keep price history for "${subscription.name}" for future calculations?`);
-      
-      // Add to optimistic updates set
-      optimisticUpdatesRef.current.add(id);
-
-      // Apply optimistic update
-      setSubscriptions(prev => prev.filter(sub => sub.id !== id));
-
       // Delete price history if user doesn't want to keep it
       if (!keepHistory) {
         try {
@@ -276,7 +301,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
             .from('subscription_price_history')
             .delete()
             .eq('subscription_id', id)
-            .eq('user_id', user?.id);
+            .eq('user_id', user.id); // Use user.id directly
         } catch (historyError) {
           console.log('Error deleting price history:', historyError);
           // Continue with subscription deletion even if price history deletion fails
@@ -286,7 +311,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       // Now delete the subscription itself - this uses a direct SQL query to avoid trigger issues
       const { error } = await supabase.rpc('delete_subscription_directly', { 
         sub_id: id,
-        user_uuid: user?.id 
+        user_uuid: user.id // Use user.id directly
       });
 
       if (error) {
@@ -294,16 +319,22 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         // If the API call fails, revert the local state
         setSubscriptions(previousSubscriptions);
         optimisticUpdatesRef.current.delete(id);
-        throw error;
+        throw error; // Re-throw error to be caught by caller if needed
       }
       
       // Remove from optimistic updates after successful deletion
       optimisticUpdatesRef.current.delete(id);
 
     } catch (error) {
-      console.error('Error deleting subscription:', error);
-      throw error;
-    }
+       // Ensure optimistic update is reverted on any error during the process
+       if (optimisticUpdatesRef.current.has(id)) {
+         setSubscriptions(previousSubscriptions);
+         optimisticUpdatesRef.current.delete(id);
+       }
+       console.error('Error deleting subscription:', error);
+       closeConfirmDeleteModal(); // Ensure modal is closed on error
+       throw error; // Re-throw error
+    } 
   };
 
   const updateSubscriptionWithPriceHistory = async (
@@ -474,11 +505,16 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       loading,
       addSubscription,
       updateSubscription: updateSubscriptionWithPriceHistory,
-      deleteSubscription,
+      triggerDeleteConfirmation,
+      confirmDeleteSubscription,
       toggleFavorite,
-      reorderSubscriptions
+      reorderSubscriptions,
+      isConfirmDeleteOpen,
+      subscriptionToDelete,
+      closeConfirmDeleteModal,
     }}>
       {children}
+      <ConfirmDeleteModal />
     </SubscriptionContext.Provider>
   );
 }

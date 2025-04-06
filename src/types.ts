@@ -43,13 +43,21 @@ export interface Subscription {
   reminderDate?: string;
   autoRenew?: boolean;
   userId?: string;
-  usageState?: 'active' | 'inactive' | 'abandoned';
+  usageState?: 'active' | 'not much' | 'unused';
   order?: number;
   // Add additional fields used in the codebase
   url?: string;
   icon?: string;
   isFavorite?: boolean;
   favorite?: boolean;
+}
+
+// Add PaymentMethodStats interface
+export interface PaymentMethodStats {
+  paymentMethod: PaymentMethod;
+  totalCost: number;
+  subscriptionCount: number;
+  averageCostPerService: number;
 }
 
 // Financial type definitions

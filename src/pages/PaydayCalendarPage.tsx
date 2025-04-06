@@ -4,6 +4,8 @@ import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterv
 import { useSubscriptions } from '../hooks/useSubscriptions';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useDevice } from '../hooks/useDevice';
+import { PaydayDetailModal } from '../components/finance/PaydayDetailModal';
 
 interface PaymentEvent {
   name: string;
@@ -13,13 +15,22 @@ interface PaymentEvent {
   billingPeriod: string;
 }
 
+interface SelectedPaydayData {
+  date: Date;
+  events: PaymentEvent[];
+}
+
 export function PaydayCalendarPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const { subscriptions } = useSubscriptions();
   const { displayCurrency, formatAmount } = useCurrency();
   const { theme } = useTheme();
+  const { isMobile } = useDevice();
   const isDark = theme === 'dark';
   const isBTC = displayCurrency === 'BTC';
+
+  const [isPaydayModalOpen, setIsPaydayModalOpen] = useState(false);
+  const [selectedPaydayData, setSelectedPaydayData] = useState<SelectedPaydayData | null>(null);
 
   // Get all days in the current month
   const monthStart = startOfMonth(currentMonth);
@@ -37,7 +48,7 @@ export function PaydayCalendarPage() {
       // Only add events if the subscription has started
       if (startDate > monthEnd) return;
       
-      const monthlyAmount = sub.monthlyCost;
+      const monthlyAmount = sub.monthlyCost || 0;
       const yearlyAmount = monthlyAmount * 12;
 
       if (sub.billingPeriod === 'yearly') {
@@ -95,6 +106,16 @@ export function PaydayCalendarPage() {
     setCurrentMonth(prev => addMonths(prev, 1));
   };
 
+  const openPaydayModal = (data: SelectedPaydayData) => {
+    setSelectedPaydayData(data);
+    setIsPaydayModalOpen(true);
+  };
+
+  const closePaydayModal = () => {
+    setIsPaydayModalOpen(false);
+    setSelectedPaydayData(null);
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -102,12 +123,12 @@ export function PaydayCalendarPage() {
         <p className="text-theme-secondary">Track your subscription payment dates</p>
       </div>
 
-      <div className="neumorphic-card rounded-xl p-6">
+      <div className="themed-card rounded-xl p-6">
         {/* Calendar Header */}
         <div className="flex items-center justify-between mb-8">
           <button
             onClick={handlePreviousMonth}
-            className="neumorphic-button p-2 rounded-lg text-theme-secondary hover:text-theme-primary"
+            className="themed-button p-2 rounded-lg text-theme-secondary hover:text-theme-primary"
           >
             <ChevronLeft size={24} />
           </button>
@@ -119,7 +140,7 @@ export function PaydayCalendarPage() {
           
           <button
             onClick={handleNextMonth}
-            className="neumorphic-button p-2 rounded-lg text-theme-secondary hover:text-theme-primary"
+            className="themed-button p-2 rounded-lg text-theme-secondary hover:text-theme-primary"
           >
             <ChevronRight size={24} />
           </button>
@@ -163,19 +184,27 @@ export function PaydayCalendarPage() {
               <div
                 key={dateKey}
                 className={`aspect-square p-1 rounded-lg relative group ${
-                  hasEvents ? 'neumorphic-card' : ''
-                } ${isToday ? 'ring-2 ring-emerald-500' : ''}`}
+                  hasEvents ? 'themed-card' : ''
+                } ${isToday ? 'ring-2 ring-emerald-500' : ''} ${ isMobile && hasEvents ? 'cursor-pointer' : ''}`}
+                onClick={() => {
+                  if (isMobile && hasEvents) {
+                    openPaydayModal({ date: day, events: sortedEvents });
+                  }
+                }}
               >
                 <div className="text-sm text-theme-secondary mb-1">
                   {format(day, 'd')}
                 </div>
 
-                {hasEvents && (
-                  <div className={`absolute inset-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg overflow-y-auto max-h-[200px] custom-scrollbar ${
-                    isDark 
-                      ? 'bg-[#1a1a1a]/95 backdrop-blur-sm border border-[#2d2d2d]'
-                      : 'bg-white/95 backdrop-blur-sm border border-gray-200/50'
-                  }`}>
+                {/* Conditionally hide hover popup on mobile? Optional */} 
+                {hasEvents && !isMobile && (
+                  <div className={`themed-card absolute inset-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg overflow-y-auto max-h-[200px] custom-scrollbar z-10`} 
+                       style={{ 
+                         // Add slight background opacity for better readability over calendar numbers if needed
+                         // Example: backgroundColor: isDark ? 'rgba(26, 26, 26, 0.9)' : 'rgba(255, 255, 255, 0.9)' 
+                         // Or rely on themed-card's default which might include transparency
+                       }}
+                  >
                     <div className="text-sm font-medium mb-2 text-theme-primary">
                       {format(day, 'MMM d, yyyy')}
                     </div>
@@ -183,31 +212,26 @@ export function PaydayCalendarPage() {
                       {sortedEvents.map((event, i) => (
                         <div 
                           key={i} 
-                          className={`text-xs p-2 rounded-lg ${
-                            event.billingPeriod === 'yearly' 
-                              ? isDark
-                                ? 'bg-[#2d2d2d] border border-purple-500/20'
-                                : 'bg-purple-100 border border-purple-200'
-                              : isDark
-                                ? 'bg-[#252525] border border-[#2d2d2d]'
-                                : 'bg-gray-100 border border-gray-200'
+                          // Apply new base class and conditional yearly class
+                          className={`payday-event-item p-2 rounded-lg ${ 
+                            event.billingPeriod === 'yearly' ? 'payday-event-item-yearly' : ''
                           }`}
                         >
-                          <div className="font-medium text-theme-primary flex items-center justify-between">
-                            <span>{event.name}</span>
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          <div className="font-medium text-theme-primary text-sm flex items-center justify-between">
+                            <span className="truncate" title={event.name}>{event.name}</span>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${ // Keep tag styling as is for now
                               event.billingPeriod === 'yearly'
                                 ? isDark
-                                  ? 'bg-[#2d2d2d] text-purple-300'
-                                  : 'bg-purple-100 text-purple-700'
+                                  ? 'bg-[#1e1b4b] text-purple-300'
+                                  : 'bg-purple-200 text-purple-800'
                                 : isDark
-                                  ? 'bg-[#1a1a1a] text-gray-300'
-                                  : 'bg-gray-200 text-gray-700'
-                            }`}>
+                                  ? 'bg-[#1a1a1a] text-gray-400'
+                                  : 'bg-gray-200 text-gray-600'
+                            }`}> 
                               {event.billingPeriod}
                             </span>
                           </div>
-                          <div className={`mt-1 ${
+                          <div className={`mt-1 text-sm ${
                             event.type === 'upcoming' 
                               ? isBTC 
                                 ? 'text-[#f7931a]' 
@@ -281,6 +305,14 @@ export function PaydayCalendarPage() {
           </div>
         </div>
       </div>
+
+      {isPaydayModalOpen && selectedPaydayData && (
+        <PaydayDetailModal
+          isOpen={isPaydayModalOpen}
+          onClose={closePaydayModal}
+          data={selectedPaydayData}
+        />
+      )}
     </div>
   );
 }

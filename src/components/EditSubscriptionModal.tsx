@@ -280,7 +280,7 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={submitting ? undefined : onClose} />
       <div className="fixed inset-0 flex items-start justify-center p-4 overflow-y-auto">
-        <div className={`neumorphic-card rounded-xl p-8 w-full max-w-md mt-8 mb-20 ${submitting ? 'opacity-70 pointer-events-none' : ''}`}>
+        <div className={`themed-card rounded-xl p-8 w-full max-w-md mt-8 mb-20 ${submitting ? 'opacity-70 pointer-events-none' : ''}`}>
           {submitting && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/10 z-10 rounded-xl">
               <div className="flex flex-col items-center gap-2">
@@ -300,7 +300,7 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   required
                 />
               </div>
@@ -311,7 +311,7 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
                   type="text"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   required
                 />
               </div>
@@ -332,7 +332,7 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
                           setShowPriceOptions(false);
                         }
                       }}
-                      className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       required
                     />
                   </div>
@@ -341,7 +341,7 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
                     <select
                       value={currency}
                       onChange={(e) => setCurrency(e.target.value as Currency)}
-                      className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     >
                       {CURRENCIES.map(curr => (
                         <option key={curr} value={curr}>{curr}</option>
@@ -351,7 +351,7 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
                 </div>
 
                 {showPriceOptions && (
-                  <div className="neumorphic-card rounded-lg p-4 space-y-4">
+                  <div className="themed-card rounded-lg p-4 space-y-4">
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
@@ -404,7 +404,7 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
                   <select
                     value={billingPeriod}
                     onChange={(e) => setBillingPeriod(e.target.value as BillingPeriod)}
-                    className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   >
                     <option value="monthly">Monthly</option>
                     <option value="yearly">Yearly</option>
@@ -423,12 +423,12 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
                     onBlur={() => {
                       setTimeout(() => setShowPaymentMethods(false), 200);
                     }}
-                    className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     placeholder="Select or type a payment method"
                     required
                   />
                   {showPaymentMethods && (
-                    <div className={`absolute z-10 w-full mt-1 neumorphic-card rounded-lg py-2 overflow-auto ${
+                    <div className={`absolute z-10 w-full mt-1 themed-card rounded-lg py-2 overflow-auto ${
                       isMobile ? 'max-h-48' : 'max-h-60'
                     }`}>
                       {filteredPaymentMethods.map((method) => (
@@ -462,7 +462,7 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
                     onBlur={() => {
                       setTimeout(() => setShowCategories(false), 200);
                     }}
-                    className={`w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 ${
+                    className={`w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 ${
                       categoryError ? 'ring-red-500' : 'focus:ring-emerald-500'
                     }`}
                     placeholder="Select or type a category"
@@ -470,7 +470,7 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
                     disabled={loadingCategories}
                   />
                   {showCategories && (
-                    <div className={`absolute z-10 w-full mt-1 neumorphic-card rounded-lg py-2 overflow-auto ${
+                    <div className={`absolute z-10 w-full mt-1 themed-card rounded-lg py-2 overflow-auto ${
                       isMobile ? 'max-h-48' : 'max-h-60'
                     }`}>
                       {loadingCategories ? (
@@ -497,14 +497,14 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
               <button
                 type="button"
                 onClick={onClose}
-                className="neumorphic-button px-6 py-3 rounded-lg text-theme-secondary hover:text-theme-primary transition-colors"
+                className="themed-button px-6 py-3 rounded-lg text-theme-secondary hover:text-theme-primary transition-colors"
                 disabled={submitting}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className={`neumorphic-button px-6 py-3 rounded-lg ${isBTC ? 'text-[#f7931a]' : 'text-emerald-500'} hover:opacity-80 transition-opacity flex items-center gap-2`}
+                className={`themed-button px-6 py-3 rounded-lg ${isBTC ? 'text-[#f7931a]' : 'text-emerald-500'} hover:opacity-80 transition-opacity flex items-center gap-2`}
                 disabled={submitting}
               >
                 {submitting ? (

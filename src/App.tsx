@@ -1,4 +1,3 @@
-import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useOutletContext } from 'react-router-dom';
 import Layout from './components/Layout';
 import { FinancePage } from './pages/FinancePage';
@@ -22,6 +21,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import type { Subscription } from './types';
 import { supabase } from './lib/supabase';
+import { useEffect } from 'react';
 
 interface LayoutContext {
   filteredSubscriptions: Subscription[];
@@ -29,7 +29,7 @@ interface LayoutContext {
 
 function HomePage() {
   const { user, loading: authLoading } = useAuth();
-  const { subscriptions, updateSubscription, deleteSubscription, reorderSubscriptions } = useSubscriptions();
+  const { updateSubscription, deleteSubscription, reorderSubscriptions } = useSubscriptions();
   const { 
     fixedExpenses,
     variableExpenses,
@@ -40,7 +40,7 @@ function HomePage() {
 
   // Handle auth session recovery
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, _session) => {
       if (event === 'TOKEN_REFRESHED') {
         console.log('Auth token refreshed');
       }

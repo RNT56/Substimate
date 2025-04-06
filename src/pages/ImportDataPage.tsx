@@ -44,7 +44,7 @@ export function ImportDataPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="neumorphic-card rounded-xl p-6">
+        <div className="themed-card rounded-xl p-6">
           <div className="flex items-center gap-4 mb-6">
             <div className={`p-3 rounded-lg ${isBTC ? 'bg-[#f7931a]/10' : 'bg-emerald-500/10'}`}>
               <Upload 
@@ -92,7 +92,7 @@ export function ImportDataPage() {
           </div>
         </div>
 
-        <div className="neumorphic-card rounded-xl p-6">
+        <div className="themed-card rounded-xl p-6">
           <div className="flex items-center gap-4 mb-6">
             <div className={`p-3 rounded-lg ${isBTC ? 'bg-[#f7931a]/10' : 'bg-emerald-500/10'}`}>
               <AlertCircle 

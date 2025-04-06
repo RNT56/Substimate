@@ -84,7 +84,7 @@ export function CalculatorPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="neumorphic-card rounded-xl p-6">
+        <div className="themed-card rounded-xl p-6">
           <div className="flex items-center gap-4 mb-6">
             <div className={`p-3 rounded-lg ${isBTC ? 'bg-[#f7931a]/10' : 'bg-emerald-500/10'}`}>
               <Bitcoin 
@@ -104,7 +104,7 @@ export function CalculatorPage() {
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 placeholder="0.00"
               />
             </div>
@@ -116,7 +116,7 @@ export function CalculatorPage() {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => setCurrency('EUR')}
-                  className={`neumorphic-button px-4 py-3 rounded-lg transition-colors ${
+                  className={`themed-button px-4 py-3 rounded-lg transition-colors ${
                     currency === 'EUR'
                       ? isBTC ? 'text-[#f7931a]' : 'text-emerald-400'
                       : 'text-theme-secondary hover:text-theme-primary'
@@ -126,7 +126,7 @@ export function CalculatorPage() {
                 </button>
                 <button
                   onClick={() => setCurrency('USD')}
-                  className={`neumorphic-button px-4 py-3 rounded-lg transition-colors ${
+                  className={`themed-button px-4 py-3 rounded-lg transition-colors ${
                     currency === 'USD'
                       ? isBTC ? 'text-[#f7931a]' : 'text-emerald-400'
                       : 'text-theme-secondary hover:text-theme-primary'
@@ -140,7 +140,7 @@ export function CalculatorPage() {
             <button
               onClick={fetchExchangeRates}
               disabled={loading}
-              className="w-full neumorphic-button px-4 py-3 rounded-lg text-theme-secondary hover:text-theme-primary flex items-center justify-center gap-2"
+              className="w-full themed-button px-4 py-3 rounded-lg text-theme-secondary hover:text-theme-primary flex items-center justify-center gap-2"
             >
               <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
               Refresh Rates
@@ -154,7 +154,7 @@ export function CalculatorPage() {
           </div>
         </div>
 
-        <div className="neumorphic-card rounded-xl p-6">
+        <div className="themed-card rounded-xl p-6">
           <h2 className="text-xl font-bold mb-6 text-theme-primary">Results</h2>
           
           <div className="space-y-6">

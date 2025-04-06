@@ -1,0 +1,253 @@
+/* Retro Light (Win95/98 Inspired) */
+:root[data-visual-style="retro"][data-theme="light"] {
+  --bg-gradient-from: #008080; /* Teal background */
+  --bg-gradient-to: #008080;
+  --text-primary: #000000;
+  --text-secondary: #404040;
+  --text-tertiary: #808080;
+  --border-color: #C0C0C0; /* Silver */
+  --title-gradient: none; /* Plain text */
+  --highlight-color: #0000FF; /* Classic blue highlight */
+
+  --card-bg: #C0C0C0; /* Silver - Reverted */
+  --card-hover: #D0D0D0; /* Reverted */
+  --card-shadow: none; /* Reverted - Bevel handled by borders */
+  /* Bevel effect using borders */
+  --card-border: 2px solid #4a3e30; /* Dark Brown */
+
+  --button-bg: #C0C0C0; /* Silver */
+  /* Bevel effect on buttons */
+  --button-shadow: none; /* Reverted - Bevel handled by borders */
+  --button-border: 1px solid #FFFFFF;
+
+  --input-bg: #ffffff;
+  --input-shadow: none; /* Reverted - Inset handled by borders */
+  /* Inset effect using borders */
+  --input-border: 2px solid #4a3e30;
+
+  --icon-bg: transparent;
+  --icon-shadow: none; /* Already none */
+  --icon-border: none;
+  --backdrop-filter: none;
+
+  /* --- Chart Theme Variables (Light) --- */
+  --chart-color-1: #008000; /* Classic Green */
+  --chart-color-2: #ffa500; /* Amber/Orange */
+  --chart-color-3: #800080; /* Purple */
+  --chart-color-4: #4682b4; /* Steel Blue */
+  --chart-color-5: #a52a2a; /* Brown */
+  --chart-color-6: #ff0000; /* Red */
+  --chart-color-7: #d2691e; /* Chocolate */
+  --chart-color-btc: #ffa500;
+  --chart-axis-color: #4a3e30;
+  --chart-text-color: #4a3e30;
+  --chart-positive-color: var(--chart-color-1);
+  --chart-negative-color: var(--chart-color-6);
+  --chart-warning-color: var(--chart-color-2);
+  --chart-highlight-color: var(--highlight-color);
+  --analytics-text-highlight-color: #008000; /* Added: Use classic green */
+  --chart-line-stroke: var(--chart-color-1);
+  --chart-line-stroke-width: 2px;
+  --chart-line-dot-stroke: var(--chart-line-stroke);
+  --chart-line-dot-stroke-width: 2px;
+  --chart-line-dot-fill: var(--card-bg);
+  --chart-bar-fill: var(--chart-color-1);
+  --chart-area-fill-1: hsla(120, 100%, 25%, 0.5); /* Solid green fill */
+  --chart-area-stroke-1: var(--chart-color-1);
+  --chart-area-stroke-width: 2px;
+  --chart-area-fill-2: hsla(0, 100%, 50%, 0.5);
+  --chart-area-stroke-2: var(--chart-color-6);
+  --chart-pie-slice-1: var(--chart-color-1);
+  --chart-pie-slice-2: var(--chart-color-2);
+  --chart-pie-slice-3: var(--chart-color-3);
+  --chart-pie-slice-4: var(--chart-color-4);
+  --chart-pie-slice-5: var(--chart-color-5);
+
+  --tooltip-bg: #f5f5d1;
+  --tooltip-text: #4a3e30;
+  --tooltip-border: 1px solid #4a3e30;
+  --tooltip-shadow: none; /* Add and set to none */
+  --chart-grid-color: rgba(74, 62, 48, 0.3); /* Faint brown grid */
+  --chart-tooltip-bg: var(--tooltip-bg);
+  --chart-tooltip-text: var(--tooltip-text);
+  --chart-tooltip-border: var(--tooltip-border);
+  --chart-tooltip-cursor-fill: rgba(180, 180, 180, 0.1);
+  --chart-tick-font-size: 12px;
+  /* New Variables for PieChart */
+  --chart-pie-cell-stroke: var(--background-primary);
+  --chart-pie-cell-stroke-width: 2px;
+  --chart-pie-outer-radius: 120px;
+  --chart-legend-icon-size: 10px;
+}
+
+:root[data-visual-style="retro"][data-theme="light"] .themed-button:active {
+  border: 1px solid #808080; /* Invert bevel on click */
+}
+
+
+/* Retro Dark (Simplified dark adaptation) */
+:root[data-visual-style="retro"][data-theme="dark"] {
+  --bg-gradient-from: #000080; /* Navy background */
+  --bg-gradient-to: #000080;
+  --text-primary: #FFFFFF;
+  --text-secondary: #C0C0C0;
+  --text-tertiary: #808080;
+  --border-color: #404040;
+  --title-gradient: none;
+  --highlight-color: #FFFF00; /* Yellow highlight */
+
+  --card-bg: #404040; /* Dark Grey - Reverted */
+  --card-hover: #505050; /* Reverted */
+  --card-shadow: none; /* Reverted - Bevel handled by borders */
+  /* Bevel effect */
+  --card-border: 1px solid #ff00ff; /* Magenta */
+
+  --button-bg: #404040; /* Dark Grey */
+  --button-shadow: none; /* Already none */
+  --button-border: 1px solid #808080;
+
+  --input-bg: #000000; /* Black */
+  --input-shadow: none; /* Reverted - Inset handled by borders */
+  /* Inset effect */
+  --input-border: 1px solid #00ffff; /* Cyan */
+
+  --icon-bg: transparent;
+  --icon-shadow: none; /* Already none */
+  --icon-border: none;
+  --backdrop-filter: none;
+
+  /* --- Chart Theme Variables (Dark) --- */
+  /* Use same palette for now, adjust if needed */
+  --chart-color-1: #00ffff; /* Cyan */
+  --chart-color-2: #ffff00; /* Yellow */
+  --chart-color-3: #ff00ff; /* Magenta */
+  --chart-color-4: #00ff00; /* Lime */
+  --chart-color-5: #ff8c00; /* Orange */
+  --chart-color-6: #ff4136; /* Neon Red */
+  --chart-color-7: #7fdbff; /* Light Blue */
+  --chart-color-btc: #f7931a;
+  --chart-axis-color: #00ffff;
+  --chart-text-color: #00ffff;
+  --chart-positive-color: var(--chart-color-4);
+  --chart-negative-color: var(--chart-color-6);
+  --chart-warning-color: var(--chart-color-2);
+  --chart-highlight-color: var(--highlight-color);
+  --analytics-text-highlight-color: #00ff00; /* Added: Use lime green */
+  --chart-line-stroke: var(--chart-color-1);
+  --chart-line-stroke-width: 2px;
+  --chart-line-dot-stroke: var(--chart-line-stroke);
+  --chart-line-dot-stroke-width: 2px;
+  --chart-line-dot-fill: var(--card-bg);
+  --chart-bar-fill: var(--chart-color-1);
+  --chart-area-fill-1: linear-gradient(180deg, hsla(180, 100%, 50%, 0.5), hsla(180, 100%, 50%, 0.1));
+  --chart-area-stroke-1: var(--chart-color-1);
+  --chart-area-stroke-width: 2px;
+  --chart-area-fill-2: linear-gradient(180deg, hsla(2, 100%, 62%, 0.5), hsla(2, 100%, 62%, 0.1));
+  --chart-area-stroke-2: var(--chart-color-6);
+  --chart-pie-slice-1: var(--chart-color-1);
+  --chart-pie-slice-2: var(--chart-color-2);
+  --chart-pie-slice-3: var(--chart-color-3);
+  --chart-pie-slice-4: var(--chart-color-4);
+  --chart-pie-slice-5: var(--chart-color-5);
+
+  --tooltip-bg: #1a001a;
+  --tooltip-text: #00ffff;
+  --tooltip-border: 1px solid #00ffff;
+  --tooltip-shadow: none; /* Add and set to none */
+  --chart-tooltip-cursor-fill: rgba(128, 0, 128, 0.15); /* Purple alpha */
+  --chart-tick-font-size: 12px;
+  /* New Variables for PieChart */
+  --chart-pie-cell-stroke: var(--background-primary);
+  --chart-pie-cell-stroke-width: 2px;
+  --chart-pie-outer-radius: 120px;
+  --chart-legend-icon-size: 10px;
+}
+
+:root[data-visual-style="retro"][data-theme="dark"] .themed-button:active {
+  border: 1px solid #000000; /* Invert bevel on click */
+}
+
+/* Apply specific border styles to components in retro theme */
+:root[data-visual-style="retro"] .themed-card,
+:root[data-visual-style="retro"] .themed-button,
+:root[data-visual-style="retro"] .themed-input {
+  border-top: var(--border-width, 1px) solid var(--border-color-top, var(--card-border, #FFFFFF));
+  border-left: var(--border-width, 1px) solid var(--border-color-left, var(--card-border, #FFFFFF));
+  border-right: var(--border-width, 1px) solid var(--border-color-right, #808080);
+  border-bottom: var(--border-width, 1px) solid var(--border-color-bottom, #808080);
+}
+
+:root[data-visual-style="retro"][data-theme="light"] .themed-card,
+:root[data-visual-style="retro"][data-theme="light"] .themed-button {
+  --border-color-top: #FFFFFF;
+  --border-color-left: #FFFFFF;
+  --border-color-right: #808080;
+  --border-color-bottom: #808080;
+}
+:root[data-visual-style="retro"][data-theme="light"] .themed-input {
+  --border-color-top: #808080;
+  --border-color-left: #808080;
+  --border-color-right: #FFFFFF;
+  --border-color-bottom: #FFFFFF;
+}
+
+
+:root[data-visual-style="retro"][data-theme="dark"] .themed-card,
+:root[data-visual-style="retro"][data-theme="dark"] .themed-button {
+  --border-color-top: #808080;
+  --border-color-left: #808080;
+  --border-color-right: #000000;
+  --border-color-bottom: #000000;
+}
+:root[data-visual-style="retro"][data-theme="dark"] .themed-input {
+  --border-color-top: #000000;
+  --border-color-left: #000000;
+  --border-color-right: #808080;
+  --border-color-bottom: #808080;
+}
+
+/* Override active button borders for dark retro */
+:root[data-visual-style="retro"][data-theme="dark"] .themed-button:active {
+  --border-color-top: #000000;
+  --border-color-left: #000000;
+  --border-color-right: #808080;
+  --border-color-bottom: #808080;
+}
+
+/* Specific overrides for Retro button theme updates - Placed outside layers */
+html[data-visual-style="retro"] .themed-button {
+  background: var(--button-bg);
+  /* Borders are handled by the more specific rules above */
+  /* border: var(--button-border); */
+  box-shadow: var(--button-shadow);
+  backdrop-filter: var(--backdrop-filter);
+}
+
+/* Specific overrides for Retro tooltips (Light Mode / Base) */
+html[data-visual-style="retro"][data-theme="light"] .themed-tooltip,
+html[data-visual-style="retro"]:not([data-theme]) .themed-tooltip {
+  background-color: #C0C0C0; /* Silver */
+  color: #000000; /* Black */
+  border-top: 1px solid #FFFFFF;
+  border-left: 1px solid #FFFFFF;
+  border-right: 1px solid #808080;
+  border-bottom: 1px solid #808080;
+  box-shadow: none;
+  border-radius: 0px;
+  padding: var(--spacing-3, 0.75rem);
+  backdrop-filter: none;
+}
+
+/* Specific overrides for Retro tooltips (Dark Mode) */
+html[data-visual-style="retro"][data-theme="dark"] .themed-tooltip {
+  background-color: #404040; /* Dark Grey */
+  color: #FFFFFF; /* White */
+  border-top: 1px solid #808080;
+  border-left: 1px solid #808080;
+  border-right: 1px solid #000000;
+  border-bottom: 1px solid #000000;
+  box-shadow: none;
+  border-radius: 0px;
+  padding: var(--spacing-3, 0.75rem);
+  backdrop-filter: none;
+} 

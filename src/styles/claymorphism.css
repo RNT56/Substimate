@@ -1,0 +1,199 @@
+/* Optional: Style primary buttons if a class like 'clay-button-primary' is used */
+/* .clay-button-primary[data-theme="light"] { */
+/*   background: var(--button-primary-bg-light); */
+/*   box-shadow: var(--button-primary-shadow-light); */
+/*   color: white; */
+/* } */
+/* .clay-button-primary[data-theme="dark"] { */
+/*   background: var(--button-primary-bg-dark); */
+/*   box-shadow: var(--button-primary-shadow-dark); */
+/*   color: #1e1b4b; */
+/* } */
+
+/* Specific overrides for Claymorphism theme updates - Placed outside layers */
+html[data-visual-style="claymorphism"] .themed-button,
+html[data-visual-style="claymorphism"] .themed-card {
+  background: var(--button-bg); /* Use --button-bg for consistency, card uses --card-bg via base */
+  /* Add subtle border */
+  border: 1px solid hsla(0, 0%, 0%, 0.05); /* Subtle dark border */
+  box-shadow: var(--button-shadow); /* Use --button-shadow for consistency, card uses --card-shadow via base */
+  backdrop-filter: var(--backdrop-filter);
+  border-radius: 0.75rem; /* Increase rounded corners (rounded-xl) */
+}
+
+/* Override border color for dark theme */
+html[data-visual-style="claymorphism"][data-theme="dark"] .themed-button,
+html[data-visual-style="claymorphism"][data-theme="dark"] .themed-card {
+  border-color: hsla(0, 0%, 100%, 0.05); /* Subtle light border */
+}
+
+/* Need to re-declare card-specific background and shadow here due to override */
+html[data-visual-style="claymorphism"] .themed-card {
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+}
+
+/* Specific overrides for Claymorphism tooltips (Light Mode / Base) */
+html[data-visual-style="claymorphism"][data-theme="light"] .themed-tooltip,
+html[data-visual-style="claymorphism"]:not([data-theme]) .themed-tooltip {
+  background-color: var(--card-bg); /* Use theme's card bg */
+  color: var(--text-primary); /* Use theme var */
+  border: 1px solid hsla(0, 0%, 0%, 0.05); /* Use theme's subtle border */
+  box-shadow: var(--shadow-clay-base); /* Use light clay shadow */
+  border-radius: var(--radius-large, 0.75rem);
+  padding: var(--spacing-3, 0.75rem);
+  backdrop-filter: none;
+}
+
+/* Specific overrides for Claymorphism tooltips (Dark Mode) */
+html[data-visual-style="claymorphism"][data-theme="dark"] .themed-tooltip {
+  background-color: var(--card-bg); /* Use theme's card bg */
+  color: var(--text-primary); /* Use theme var */
+  border: 1px solid hsla(0, 0%, 100%, 0.05); /* Use theme's subtle border */
+  box-shadow: var(--shadow-clay-dark); /* Use dark clay shadow */
+  border-radius: var(--radius-large, 0.75rem);
+  padding: var(--spacing-3, 0.75rem);
+  backdrop-filter: none;
+}
+
+/* DELETE OLD CHART VARIABLES SECTION */ 
+
+:root[data-visual-style="claymorphism"][data-theme="light"] {
+  /* Text Colors (Default Light) */
+  --text-primary: #5D4037;    /* Dark Brown */
+  --text-secondary: #795548;  /* Medium Brown */
+  --text-tertiary: #A1887F;   /* Light Brown/Beige */
+
+  /* Claymorphism Light Mode General Variables */
+  --bg-gradient-from: #fffaf0; /* Add V2 background */
+  --bg-gradient-to: #fdf5e6;   /* Add V2 background */
+  --base-color-light: #fbf5eb; /* Add V2 base color */
+  --card-bg: var(--base-color-light); /* Restore V2 card bg */
+  --button-bg: var(--card-bg); /* Add missing button background */
+  --card-border: none;
+  /* Soften the card shadow for a more clay-like effect */
+  --card-shadow: -4px -4px 10px #ffffff, 4px 4px 10px #d1c8bc, inset 1px 1px 2px #d1c8bc, inset -1px -1px 2px #ffffff;
+  --card-hover: #fffefa; /* Restore V2 card hover */
+  --input-bg: #f0e9e0;
+  --input-border: none;
+  --input-shadow: inset 2px 2px 4px #d1c8bc, inset -2px -2px 4px #ffffff;
+  --icon-bg: #f0e9e0;
+  --icon-border: none;
+  --icon-shadow: -4px -4px 8px #ffffff, 4px 4px 8px #d1c8bc;
+  --tooltip-bg: #f0e9e0;
+  --tooltip-text: var(--text-primary);
+  --tooltip-shadow: -2px -2px 5px #ffffff, 2px 2px 5px #d1c8bc;
+  --backdrop-filter: none;
+
+  /* --- Claymorphism Light Mode Chart Variables --- */
+  --chart-color-1: #81c16f; /* Soft Green */
+  --chart-color-2: #fcd34d; /* Soft Yellow */
+  --chart-color-3: #93c5fd; /* Soft Blue */
+  --chart-color-4: #c4b5fd; /* Soft Purple */
+  --chart-color-5: #f9a8d4; /* Soft Pink */
+  --chart-color-6: #fda4af; /* Soft Red */
+  --chart-color-7: #fdba74; /* Soft Orange */
+  --chart-color-btc: #fdbf70; /* Softer BTC orange */
+  --chart-grid-color: rgba(161, 152, 141, 0.3); /* #a1988d with alpha */
+  --chart-axis-color: var(--text-secondary);
+  --chart-text-color: var(--text-secondary);
+  --chart-tooltip-bg: var(--tooltip-bg);
+  --chart-tooltip-text: var(--tooltip-text);
+  --chart-tooltip-shadow: var(--tooltip-shadow);
+  --chart-positive-color: var(--chart-color-1);
+  --chart-negative-color: var(--chart-color-6);
+  --chart-warning-color: var(--chart-color-2);
+  --chart-highlight-color: var(--highlight-color);
+  --analytics-text-highlight-color: #616161; /* Added: Use soft green */
+  --chart-line-stroke: var(--chart-color-1);
+  --chart-line-dot-stroke: var(--chart-line-stroke);
+  --chart-line-dot-fill: var(--card-bg);
+  --chart-bar-fill: var(--chart-color-1); /* Use solid color instead of gradient */
+  --chart-area-fill-1: linear-gradient(180deg, hsla(146, 77%, 75%, 0.6), hsla(146, 77%, 75%, 0.2));
+  --chart-area-stroke-1: var(--chart-color-1);
+  --chart-area-fill-2: linear-gradient(180deg, hsla(354, 97%, 82%, 0.6), hsla(354, 97%, 82%, 0.2));
+  --chart-area-stroke-2: var(--chart-color-6);
+  --chart-pie-slice-1: hsla(146, 77%, 75%, 0.8);
+  --chart-pie-slice-2: hsla(45, 96%, 64%, 0.8);
+  --chart-pie-slice-3: hsla(213, 96%, 78%, 0.8);
+  --chart-pie-slice-4: hsla(253, 95%, 85%, 0.8);
+  --chart-pie-slice-5: hsla(332, 90%, 82%, 0.8);
+  /* Add variables from ExpenseBreakdown */
+  --chart-tooltip-cursor-fill: hsla(35, 33%, 75%, 0.15); /* Soft beige alpha */
+  --chart-tick-font-size: 12px;
+  /* New Variables for PieChart */
+  --chart-pie-cell-stroke: var(--background-primary);
+  --chart-pie-cell-stroke-width: 2px;
+  --chart-pie-outer-radius: 120px;
+  --chart-legend-icon-size: 10px;
+}
+
+:root[data-visual-style="claymorphism"][data-theme="dark"] {
+  /* Text Colors (Default Dark) */
+  --text-primary: #F5F5F5;    /* Soft Off-White */
+  --text-secondary: #BDBDBD;  /* Warmer Light Grey */
+  --text-tertiary: #757575;   /* Warmer Medium Grey */
+
+  /* Claymorphism Dark Mode General Variables */
+  --bg-gradient-from: #2e2925; /* Add V2 background */
+  --bg-gradient-to: #4d443d;   /* Add V2 background */
+  --base-color-dark: #403a34; /* Add V2 base color */
+  --card-bg: var(--base-color-dark); /* Restore V2 card bg */
+  --button-bg: var(--card-bg); /* Add missing button background */
+  --card-border: none;
+  --card-shadow: -6px -6px 12px #3f3a32, 6px 6px 12px #3a3a3a, inset 2px 2px 4px #3a3a3a, inset -2px -2px 4px #524b3e;
+  --card-hover: #6b5f57; /* Restore V2 card hover */
+  --input-bg: #4a4a4a;
+  --input-border: none;
+  --input-shadow: inset 2px 2px 4px #3a3a3a, inset -2px -2px 4px #5a5a5a;
+  --icon-bg: #4a4a4a;
+  --icon-border: none;
+  --icon-shadow: -4px -4px 8px #5a5a5a, 4px 4px 8px #3a3a3a;
+  --tooltip-bg: #4a4a4a;
+  --tooltip-text: var(--text-primary);
+  --tooltip-shadow: -2px -2px 5px #5a5a5a, 2px 2px 5px #3a3a3a;
+  --backdrop-filter: none;
+
+  /* --- Claymorphism Dark Mode Chart Variables --- */
+  /* Use slightly more saturated/brighter pastels for dark mode */
+  --chart-color-1: #81C784; /* Brighter Soft Green */
+  --chart-color-2: #FFD54F; /* Brighter Soft Yellow */
+  --chart-color-3: #64B5F6; /* Brighter Soft Blue */
+  --chart-color-4: #B39DDB; /* Brighter Soft Purple */
+  --chart-color-5: #F06292; /* Brighter Soft Pink */
+  --chart-color-6: #E57373; /* Brighter Soft Red */
+  --chart-color-7: #FFB74D; /* Brighter Soft Orange */
+  --chart-color-btc: #FFCA28; /* Brighter Gold */
+  --chart-grid-color: rgba(120, 120, 120, 0.4); /* #787878 with alpha */
+  --chart-axis-color: var(--text-secondary);
+  --chart-text-color: var(--text-secondary);
+  --chart-tooltip-bg: var(--tooltip-bg);
+  --chart-tooltip-text: var(--tooltip-text);
+  --chart-tooltip-shadow: var(--tooltip-shadow);
+  --chart-positive-color: var(--chart-color-1);
+  --chart-negative-color: var(--chart-color-6);
+  --chart-warning-color: var(--chart-color-2);
+  --chart-highlight-color: var(--highlight-color);
+  --analytics-text-highlight-color: #e3deb4; /* Added: Use brighter green */
+  --chart-line-stroke: var(--chart-color-1);
+  --chart-line-dot-stroke: var(--chart-line-stroke);
+  --chart-line-dot-fill: var(--card-bg);
+  --chart-bar-fill: var(--chart-color-1); /* Use solid color instead of gradient */
+  --chart-area-fill-1: linear-gradient(180deg, hsla(145, 70%, 58%, 0.6), hsla(145, 70%, 58%, 0.2));
+  --chart-area-stroke-1: var(--chart-color-1);
+  --chart-area-fill-2: linear-gradient(180deg, hsla(0, 91%, 71%, 0.6), hsla(0, 91%, 71%, 0.2));
+  --chart-area-stroke-2: var(--chart-color-6);
+  --chart-pie-slice-1: hsla(145, 70%, 58%, 0.8);
+  --chart-pie-slice-2: hsla(48, 95%, 53%, 0.8);
+  --chart-pie-slice-3: hsla(217, 94%, 68%, 0.8);
+  --chart-pie-slice-4: hsla(258, 92%, 76%, 0.8);
+  --chart-pie-slice-5: hsla(330, 85%, 71%, 0.8);
+  /* Add variables from ExpenseBreakdown */
+  --chart-tooltip-cursor-fill: hsla(0, 0%, 60%, 0.15); /* Darker grey alpha */
+  --chart-tick-font-size: 12px;
+  /* New Variables for PieChart */
+  --chart-pie-cell-stroke: var(--background-primary);
+  --chart-pie-cell-stroke-width: 2px;
+  --chart-pie-outer-radius: 120px;
+  --chart-legend-icon-size: 10px;
+} 

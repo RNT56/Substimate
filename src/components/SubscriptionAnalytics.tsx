@@ -66,19 +66,19 @@ export function SubscriptionAnalytics({
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-theme-secondary">Monthly Cost:</span>
-                    <span className={displayCurrency === 'BTC' ? 'text-[#f7931a]' : 'text-emerald-500'}>
+                    <span className={displayCurrency === 'BTC' ? 'text-[#f7931a]' : 'text-analytics-text-highlight'}>
                       {formatAmount(category.totalCost, displayCurrency)}/mo
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-theme-secondary">Services:</span>
-                    <span className={displayCurrency === 'BTC' ? 'text-[#f7931a]' : 'text-emerald-500'}>
+                    <span className={displayCurrency === 'BTC' ? 'text-[#f7931a]' : 'text-analytics-text-highlight'}>
                       {category.subscriptionCount}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-theme-secondary">Avg. Cost:</span>
-                    <span className={displayCurrency === 'BTC' ? 'text-[#f7931a]' : 'text-emerald-500'}>
+                    <span className={displayCurrency === 'BTC' ? 'text-[#f7931a]' : 'text-analytics-text-highlight'}>
                       {formatAmount(category.averageCostPerService, displayCurrency)}/mo
                     </span>
                   </div>

@@ -1,7 +1,6 @@
 import React from 'react';
 import { 
   CreditCard, 
-  Calculator, 
   BarChart2, 
   Settings, 
   Upload, 
@@ -39,7 +38,7 @@ const bottomNavItems = [
 
 export function Sidebar({ isOpen, onClose, totalMonthlyCost }: Props) {
   const { signOut } = useAuth();
-  const { theme } = useTheme();
+  const { theme: _theme } = useTheme();
   const { displayCurrency } = useCurrency();
   const location = useLocation();
   const { isMobile } = useDevice();
@@ -59,12 +58,12 @@ export function Sidebar({ isOpen, onClose, totalMonthlyCost }: Props) {
       <div className={`fixed top-0 right-0 h-full w-80 z-50 transform transition-transform duration-300 ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       }`}>
-        <div className="h-full neumorphic-card rounded-l-xl p-6 flex flex-col">
+        <div className="h-full themed-card rounded-l-xl p-6 flex flex-col">
           {/* Toggle Button - Only show on desktop */}
           {!isMobile && (
             <button
               onClick={() => onClose()}
-              className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 neumorphic-button p-2 rounded-l-xl text-theme-secondary hover:text-theme-primary"
+              className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 themed-button p-2 rounded-l-xl text-theme-secondary hover:text-theme-primary"
             >
               {isOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
             </button>
@@ -86,6 +85,7 @@ export function Sidebar({ isOpen, onClose, totalMonthlyCost }: Props) {
               <Link
                 key={item.label}
                 to={item.href}
+                onClick={onClose}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   location.pathname === item.href
                     ? isBTC ? 'text-[#f7931a]' : 'text-emerald-400'
@@ -104,6 +104,7 @@ export function Sidebar({ isOpen, onClose, totalMonthlyCost }: Props) {
               <Link
                 key={item.label}
                 to={item.href}
+                onClick={onClose}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   location.pathname === item.href
                     ? isBTC ? 'text-[#f7931a]' : 'text-emerald-400'
@@ -116,7 +117,10 @@ export function Sidebar({ isOpen, onClose, totalMonthlyCost }: Props) {
             ))}
 
             <button
-              onClick={signOut}
+              onClick={() => {
+                signOut();
+                onClose();
+              }}
               className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:text-red-300 transition-colors w-full"
             >
               <LogOut size={20} />

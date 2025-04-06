@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowUpDown, TrendingUp, TrendingDown } from 'lucide-react';
 import type { Subscription, PaymentMethodStats } from '../types';
 import { getSubscriptionCategory } from '../utils/subscriptionPredictions';
@@ -6,6 +6,7 @@ import { DashboardGrid } from './DashboardGrid';
 import { format, parseISO, differenceInMonths, startOfMonth, isSameMonth } from 'date-fns';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { useDevice } from '../hooks/useDevice';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface Props {
   subscriptions: Subscription[];
@@ -19,7 +20,11 @@ export function UsageStatistics({ subscriptions }: Props) {
   const [sortDirection, setSortDirection] = React.useState<SortDirection>('asc');
   const { displayCurrency, convertAmount, formatAmount } = useCurrency();
   const { isMobile } = useDevice();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const isBTC = displayCurrency === 'BTC';
+
+  const [timeframe, setTimeframe] = useState<'all' | 'lastMonth' | 'lastQuarter' | 'lastYear'>('all');
 
   // Calculate subscription trends
   const trends = React.useMemo(() => {
@@ -38,13 +43,13 @@ export function UsageStatistics({ subscriptions }: Props) {
     });
 
     const recentMonthlyCost = recentSubs.reduce((sum, sub) => {
-      const monthlyCost = sub.billingPeriod === 'yearly' ? sub.monthlyCost / 12 : sub.monthlyCost;
+      const monthlyCost = sub.billingPeriod === 'yearly' ? (sub.monthlyCost ?? 0) / 12 : (sub.monthlyCost ?? 0);
       const convertedCost = convertAmount(monthlyCost, 'EUR', displayCurrency);
       return sum + convertedCost;
     }, 0);
 
     const olderMonthlyCost = olderSubs.reduce((sum, sub) => {
-      const monthlyCost = sub.billingPeriod === 'yearly' ? sub.monthlyCost / 12 : sub.monthlyCost;
+      const monthlyCost = sub.billingPeriod === 'yearly' ? (sub.monthlyCost ?? 0) / 12 : (sub.monthlyCost ?? 0);
       const convertedCost = convertAmount(monthlyCost, 'EUR', displayCurrency);
       return sum + convertedCost;
     }, 0);
@@ -68,13 +73,13 @@ export function UsageStatistics({ subscriptions }: Props) {
         trend: ((recentMonthlyCost - olderMonthlyCost) / (olderMonthlyCost || 1)) * 100
       },
       usageDistribution: {
-        active: (activeCount / subscriptions.length) * 100,
-        notMuch: (notMuchCount / subscriptions.length) * 100,
-        unused: (unusedCount / subscriptions.length) * 100
+        active: subscriptions.length > 0 ? (activeCount / subscriptions.length) * 100 : 0,
+        notMuch: subscriptions.length > 0 ? (notMuchCount / subscriptions.length) * 100 : 0,
+        unused: subscriptions.length > 0 ? (unusedCount / subscriptions.length) * 100 : 0
       },
       billingDistribution: {
-        yearly: (yearlySubsCount / subscriptions.length) * 100,
-        monthly: (monthlySubsCount / subscriptions.length) * 100
+        yearly: subscriptions.length > 0 ? (yearlySubsCount / subscriptions.length) * 100 : 0,
+        monthly: subscriptions.length > 0 ? (monthlySubsCount / subscriptions.length) * 100 : 0
       }
     };
   }, [subscriptions, displayCurrency, convertAmount]);
@@ -90,7 +95,7 @@ export function UsageStatistics({ subscriptions }: Props) {
       };
     }
     
-    const monthlyCost = sub.billingPeriod === 'yearly' ? sub.monthlyCost / 12 : sub.monthlyCost;
+    const monthlyCost = sub.billingPeriod === 'yearly' ? (sub.monthlyCost ?? 0) / 12 : (sub.monthlyCost ?? 0);
     const convertedCost = convertAmount(monthlyCost, 'EUR', displayCurrency);
     
     acc[sub.paymentMethod].totalCost += convertedCost;
@@ -107,12 +112,13 @@ export function UsageStatistics({ subscriptions }: Props) {
     if (!acc[category]) {
       acc[category] = { active: 0, notMuch: 0, unused: 0, total: 0, totalCost: 0 };
     }
-    acc[category][sub.usageState === 'not much' ? 'notMuch' : sub.usageState] += 1;
+    const usageState = sub.usageState ?? 'unused';
+    acc[category][usageState === 'not much' ? 'notMuch' : usageState] += 1;
     acc[category].total += 1;
 
-    const monthlyCost = sub.billingPeriod === 'yearly' ? sub.monthlyCost / 12 : sub.monthlyCost;
-    const convertedCost = convertAmount(monthlyCost, 'EUR', displayCurrency);
-    acc[category].totalCost += convertedCost;
+    const categoryMonthlyCost = sub.billingPeriod === 'yearly' ? (sub.monthlyCost ?? 0) / 12 : (sub.monthlyCost ?? 0);
+    const categoryConvertedCost = convertAmount(categoryMonthlyCost, 'EUR', displayCurrency);
+    acc[category].totalCost += categoryConvertedCost;
 
     return acc;
   }, {});
@@ -126,15 +132,15 @@ export function UsageStatistics({ subscriptions }: Props) {
         comparison = a.name.localeCompare(b.name);
         break;
       case 'cost':
-        const aMonthlyCost = a.billingPeriod === 'yearly' ? a.monthlyCost / 12 : a.monthlyCost;
-        const bMonthlyCost = b.billingPeriod === 'yearly' ? b.monthlyCost / 12 : b.monthlyCost;
+        const aMonthlyCost = a.billingPeriod === 'yearly' ? (a.monthlyCost ?? 0) / 12 : (a.monthlyCost ?? 0);
+        const bMonthlyCost = b.billingPeriod === 'yearly' ? (b.monthlyCost ?? 0) / 12 : (b.monthlyCost ?? 0);
         const aConverted = convertAmount(aMonthlyCost, 'EUR', displayCurrency);
         const bConverted = convertAmount(bMonthlyCost, 'EUR', displayCurrency);
         comparison = aConverted - bConverted;
         break;
       case 'usage':
         const usageOrder = { active: 0, 'not much': 1, unused: 2 };
-        comparison = usageOrder[a.usageState] - usageOrder[b.usageState];
+        comparison = usageOrder[a.usageState ?? 'unused'] - usageOrder[b.usageState ?? 'unused'];
         break;
     }
 
@@ -164,17 +170,17 @@ export function UsageStatistics({ subscriptions }: Props) {
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm text-theme-secondary">New Subscriptions</span>
                   <div className="flex items-center gap-2">
-                    <span className={trends.subscriptionGrowth.trend >= 0 ? 'highlight-color' : 'text-red-500'}>
+                    <span className={trends.subscriptionGrowth.trend >= 0 ? 'text-chart-positive' : 'text-chart-negative'}>
                       {trends.subscriptionGrowth.trend.toFixed(1)}%
                     </span>
                     {trends.subscriptionGrowth.trend >= 0 ? 
-                      <TrendingUp size={16} className="highlight-color" /> : 
-                      <TrendingDown size={16} className="text-red-500" />}
+                      <TrendingUp size={16} className="text-chart-positive" /> : 
+                      <TrendingDown size={16} className="text-chart-negative" />}
                   </div>
                 </div>
                 <div className="progress-bar-bg">
                   <div 
-                    className={`${isBTC ? 'bg-[#f7931a]' : 'bg-emerald-500'} h-2 rounded-full transition-all`}
+                    className={`${isBTC ? 'bg-chart-btc' : 'bg-chart-positive'} h-2 rounded-full transition-all`}
                     style={{ width: `${Math.min(Math.abs(trends.subscriptionGrowth.trend), 100)}%` }}
                   />
                 </div>
@@ -183,17 +189,17 @@ export function UsageStatistics({ subscriptions }: Props) {
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm text-theme-secondary">Monthly Cost</span>
                   <div className="flex items-center gap-2">
-                    <span className={trends.costGrowth.trend >= 0 ? 'highlight-color' : 'text-red-500'}>
+                    <span className={trends.costGrowth.trend >= 0 ? 'text-chart-positive' : 'text-chart-negative'}>
                       {trends.costGrowth.trend.toFixed(1)}%
                     </span>
                     {trends.costGrowth.trend >= 0 ? 
-                      <TrendingUp size={16} className="highlight-color" /> : 
-                      <TrendingDown size={16} className="text-red-500" />}
+                      <TrendingUp size={16} className="text-chart-positive" /> : 
+                      <TrendingDown size={16} className="text-chart-negative" />}
                   </div>
                 </div>
                 <div className="progress-bar-bg">
                   <div 
-                    className={`${isBTC ? 'bg-[#f7931a]' : 'bg-emerald-500'} h-2 rounded-full transition-all`}
+                    className={`${isBTC ? 'bg-chart-btc' : 'bg-chart-positive'} h-2 rounded-full transition-all`}
                     style={{ width: `${Math.min(Math.abs(trends.costGrowth.trend), 100)}%` }}
                   />
                 </div>
@@ -209,11 +215,11 @@ export function UsageStatistics({ subscriptions }: Props) {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm text-theme-secondary">Active</span>
-                <span className="highlight-color">{trends.usageDistribution.active.toFixed(1)}%</span>
+                <span className="text-chart-positive">{trends.usageDistribution.active.toFixed(1)}%</span>
               </div>
               <div className="progress-bar-bg">
                 <div 
-                  className={`${isBTC ? 'bg-[#f7931a]' : 'bg-emerald-500'} h-2 rounded-full transition-all`}
+                  className={`${isBTC ? 'bg-chart-btc' : 'bg-chart-positive'} h-2 rounded-full transition-all`}
                   style={{ width: `${trends.usageDistribution.active}%` }}
                 />
               </div>
@@ -221,11 +227,11 @@ export function UsageStatistics({ subscriptions }: Props) {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm text-theme-secondary">Not Much</span>
-                <span className="text-amber-500">{trends.usageDistribution.notMuch.toFixed(1)}%</span>
+                <span className="text-chart-warning">{trends.usageDistribution.notMuch.toFixed(1)}%</span>
               </div>
               <div className="progress-bar-bg">
                 <div 
-                  className="bg-amber-500 h-2 rounded-full transition-all"
+                  className="bg-chart-warning h-2 rounded-full transition-all"
                   style={{ width: `${trends.usageDistribution.notMuch}%` }}
                 />
               </div>
@@ -233,11 +239,11 @@ export function UsageStatistics({ subscriptions }: Props) {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm text-theme-secondary">Unused</span>
-                <span className="text-red-500">{trends.usageDistribution.unused.toFixed(1)}%</span>
+                <span className="text-chart-negative">{trends.usageDistribution.unused.toFixed(1)}%</span>
               </div>
               <div className="progress-bar-bg">
                 <div 
-                  className="bg-red-500 h-2 rounded-full transition-all"
+                  className="bg-chart-negative h-2 rounded-full transition-all"
                   style={{ width: `${trends.usageDistribution.unused}%` }}
                 />
               </div>
@@ -252,11 +258,11 @@ export function UsageStatistics({ subscriptions }: Props) {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm text-theme-secondary">Monthly Plans</span>
-                <span className="highlight-color">{trends.billingDistribution.monthly.toFixed(1)}%</span>
+                <span className="text-chart-highlight">{trends.billingDistribution.monthly.toFixed(1)}%</span>
               </div>
               <div className="progress-bar-bg">
                 <div 
-                  className={`${isBTC ? 'bg-[#f7931a]' : 'bg-emerald-500'} h-2 rounded-full transition-all`}
+                  className={`${isBTC ? 'bg-chart-btc' : 'bg-chart-highlight'} h-2 rounded-full transition-all`}
                   style={{ width: `${trends.billingDistribution.monthly}%` }}
                 />
               </div>
@@ -264,11 +270,11 @@ export function UsageStatistics({ subscriptions }: Props) {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm text-theme-secondary">Yearly Plans</span>
-                <span className="highlight-color">{trends.billingDistribution.yearly.toFixed(1)}%</span>
+                <span className="text-chart-highlight">{trends.billingDistribution.yearly.toFixed(1)}%</span>
               </div>
               <div className="progress-bar-bg">
                 <div 
-                  className={`${isBTC ? 'bg-[#f7931a]' : 'bg-emerald-500'} h-2 rounded-full transition-all`}
+                  className={`${isBTC ? 'bg-chart-btc' : 'bg-chart-highlight'} h-2 rounded-full transition-all`}
                   style={{ width: `${trends.billingDistribution.yearly}%` }}
                 />
               </div>
@@ -282,11 +288,11 @@ export function UsageStatistics({ subscriptions }: Props) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-theme-secondary">New Subscriptions (3mo)</span>
-              <span className="highlight-color">{trends.subscriptionGrowth.recent}</span>
+              <span className="text-chart-highlight">{trends.subscriptionGrowth.recent}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-theme-secondary">Added Monthly Cost</span>
-              <span className="highlight-color">
+              <span className="text-chart-highlight">
                 {formatAmount(trends.costGrowth.recent, displayCurrency)}
               </span>
             </div>
@@ -304,20 +310,20 @@ export function UsageStatistics({ subscriptions }: Props) {
             <h3 className="font-medium text-theme-primary mb-3">{stats.paymentMethod}</h3>
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-theme-secondary">Monthly Cost:</span>
-                <span className={`${isBTC ? 'text-[#f7931a]' : 'text-emerald-500'} text-right`}>
+                <span className="text-theme-secondary mr-2">Monthly Cost:</span>
+                <span className={`${isBTC ? 'text-chart-btc' : 'text-analytics-text-highlight'} text-right`}>
                   {formatAmount(stats.totalCost, displayCurrency)}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-theme-secondary">Services:</span>
-                <span className={`${isBTC ? 'text-[#f7931a]' : 'text-emerald-500'} text-right`}>
+                <span className="text-theme-secondary mr-2">Services:</span>
+                <span className={`${isBTC ? 'text-chart-btc' : 'text-analytics-text-highlight'} text-right`}>
                   {stats.subscriptionCount}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-theme-secondary">Avg. Cost:</span>
-                <span className={`${isBTC ? 'text-[#f7931a]' : 'text-emerald-500'} text-right`}>
+                <span className="text-theme-secondary mr-2">Avg. Cost:</span>
+                <span className={`${isBTC ? 'text-chart-btc' : 'text-analytics-text-highlight'} text-right`}>
                   {formatAmount(stats.averageCostPerService, displayCurrency)}
                 </span>
               </div>
@@ -337,26 +343,26 @@ export function UsageStatistics({ subscriptions }: Props) {
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-theme-secondary">Monthly Cost:</span>
-                <span className={`${isBTC ? 'text-[#f7931a]' : 'text-emerald-500'} text-right`}>
+                <span className={`${isBTC ? 'text-chart-btc' : 'text-analytics-text-highlight'} text-right`}>
                   {formatAmount(stats.totalCost, displayCurrency)}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-theme-secondary">Active:</span>
-                <span className={`${isBTC ? 'text-[#f7931a]' : 'text-emerald-500'} text-right`}>
-                  {stats.active} ({((stats.active / stats.total) * 100).toFixed(0)}%)
+                <span className={`${isBTC ? 'text-chart-btc' : 'text-chart-positive'} text-right`}>
+                  {stats.active} ({stats.total > 0 ? ((stats.active / stats.total) * 100).toFixed(0) : 0}%)
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-theme-secondary">Not Much:</span>
-                <span className="text-amber-500 text-right">
-                  {stats.notMuch} ({((stats.notMuch / stats.total) * 100).toFixed(0)}%)
+                <span className="text-chart-warning text-right">
+                  {stats.notMuch} ({stats.total > 0 ? ((stats.notMuch / stats.total) * 100).toFixed(0) : 0}%)
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-theme-secondary">Unused:</span>
-                <span className="text-red-500 text-right">
-                  {stats.unused} ({((stats.unused / stats.total) * 100).toFixed(0)}%)
+                <span className="text-chart-negative text-right">
+                  {stats.unused} ({stats.total > 0 ? ((stats.unused / stats.total) * 100).toFixed(0) : 0}%)
                 </span>
               </div>
             </div>
@@ -402,7 +408,7 @@ export function UsageStatistics({ subscriptions }: Props) {
           </thead>
           <tbody>
             {sortedSubscriptions.map(sub => {
-              const monthlyCost = sub.billingPeriod === 'yearly' ? sub.monthlyCost / 12 : sub.monthlyCost;
+              const monthlyCost = sub.billingPeriod === 'yearly' ? (sub.monthlyCost ?? 0) / 12 : (sub.monthlyCost ?? 0);
               const convertedCost = convertAmount(monthlyCost, 'EUR', displayCurrency);
               const formattedCost = formatAmount(convertedCost, displayCurrency);
 
@@ -413,13 +419,13 @@ export function UsageStatistics({ subscriptions }: Props) {
                   <td className="py-3 capitalize text-theme-secondary">{sub.billingPeriod}</td>
                   <td className="py-3 text-theme-secondary">{sub.paymentMethod}</td>
                   <td className="py-3">
-                    <span className={`px-2 py-1 rounded-full text-sm ${
-                      sub.usageState === 'active' ? 'bg-emerald-500/10 text-emerald-500' :
-                      sub.usageState === 'not much' ? 'bg-amber-500/10 text-amber-500' :
-                      'bg-red-500/10 text-red-500'
-                    }`}>
-                      {sub.usageState === 'not much' ? 'Not Much' : 
-                        sub.usageState.charAt(0).toUpperCase() + sub.usageState.slice(1)}
+                    <span className={`px-2 py-1 rounded-full text-sm 
+                      ${(sub.usageState ?? 'unused') === 'active' ? 'bg-chart-positive/20 text-chart-positive' : 
+                        (sub.usageState ?? 'unused') === 'not much' ? 'bg-chart-warning/20 text-chart-warning' : 
+                        'bg-chart-negative/20 text-chart-negative'}
+                    `}>
+                      {(sub.usageState ?? 'unused') === 'not much' ? 'Not Much' : 
+                        (sub.usageState ?? 'unused').charAt(0).toUpperCase() + (sub.usageState ?? 'unused').slice(1)}
                     </span>
                   </td>
                 </tr>

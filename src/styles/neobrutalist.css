@@ -1,0 +1,162 @@
+/* Neo-Brutalist Light */
+:root[data-visual-style="neobrutalist"][data-theme="light"] {
+  /* Text Colors (Default Light) */
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+
+  --card-bg: #ffffff;
+  --card-hover: #f0f0f0;
+  --card-shadow: 6px 6px 0px #000000; /* Solid, slightly offset black shadow */
+  --card-border: 2px solid #000000; /* Solid black border */
+  --button-bg: #ffffff;
+  --button-shadow: 4px 4px 0px rgba(29, 78, 216, 0.8);
+  --button-border: 2px solid #1e293b;
+  --input-bg: #ffffff;
+  --input-shadow: 3px 3px 0px #000000;
+  --input-border: 2px solid #000000;
+  --icon-bg: transparent;
+  --icon-shadow: none;
+  --icon-border: none;
+  --backdrop-filter: none;
+  /* Optional: Override highlight color for this style */
+  /* --highlight-color: #059669; */ /* Example: Use a different green */
+
+  /* --- Chart Theme Variables (Light) --- */
+  --chart-color-1: #ff00ff; /* Magenta */
+  --chart-color-2: #00ffff; /* Cyan */
+  --chart-color-3: #00ff00; /* Lime Green */
+  --chart-color-4: #ffff00; /* Yellow */
+  --chart-color-5: #ff8c00; /* Dark Orange */
+  --chart-color-6: #ff0000; /* Red */
+  --chart-color-7: #0000ff; /* Blue */
+  --chart-color-btc: #f7931a;
+  --chart-grid-color: rgba(0, 0, 0, 0.3);
+  --chart-axis-color: #000000;
+  --chart-text-color: #000000;
+  --chart-tooltip-bg: #ffff00; /* Bright yellow tooltip */
+  --chart-tooltip-text: #000000;
+  --chart-tooltip-border: 2px solid #000000;
+  --chart-positive-color: var(--chart-color-3);
+  --chart-negative-color: var(--chart-color-6);
+  --chart-warning-color: var(--chart-color-4);
+  --chart-highlight-color: var(--accent-color);
+  --analytics-text-highlight-color: #00ff00; /* Keep lime green for light */
+  --chart-line-stroke: var(--chart-color-1);
+  --chart-line-stroke-width: 2px;
+  --chart-line-dot-stroke: var(--chart-line-stroke);
+  --chart-line-dot-stroke-width: 2px;
+  --chart-line-dot-fill: var(--background-primary);
+  --chart-bar-fill: var(--chart-color-1);
+  --chart-area-fill-1: hsla(300, 100%, 50%, 0.5); /* Semi-transparent fill */
+  --chart-area-stroke-1: var(--chart-color-1);
+  --chart-area-stroke-width: 2px;
+  --chart-area-fill-2: hsla(0, 100%, 50%, 0.5);
+  --chart-area-stroke-2: var(--chart-color-6);
+  --chart-pie-slice-1: var(--chart-color-1);
+  --chart-pie-slice-2: var(--chart-color-2);
+  --chart-pie-slice-3: var(--chart-color-3);
+  --chart-pie-slice-4: var(--chart-color-4);
+  --chart-pie-slice-5: var(--chart-color-5);
+  /* Add variables from ExpenseBreakdown */
+  --chart-tooltip-cursor-fill: rgba(128, 128, 128, 0.1);
+  --chart-tick-font-size: 12px;
+  /* New Variables for PieChart */
+  --chart-pie-cell-stroke: var(--background-primary);
+  --chart-pie-cell-stroke-width: 2px;
+  --chart-pie-outer-radius: 120px;
+  --chart-legend-icon-size: 10px;
+}
+
+/* Neo-Brutalist Dark */
+:root[data-visual-style="neobrutalist"][data-theme="dark"] {
+  /* Text Colors (Default Dark) */
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-tertiary: #6b7280;
+
+  --card-bg: #1a1a1a;
+  --card-hover: #2a2a2a;
+  --card-shadow: 6px 6px 0px #ffffff; /* Solid, slightly offset white shadow */
+  --card-border: 2px solid #ffffff; /* Solid white border */
+  --button-bg: #1a1a1a;
+  --button-shadow: 4px 4px 0px rgba(96, 165, 250, 0.8);
+  --button-border: 2px solid #f1f5f9;
+  --input-bg: #1a1a1a;
+  --input-shadow: 3px 3px 0px #ffffff;
+  --input-border: 2px solid #ffffff;
+  --icon-bg: transparent;
+  --icon-shadow: none;
+  --icon-border: none;
+  --backdrop-filter: none;
+    /* Optional: Override highlight color for this style */
+  /* --highlight-color: #f7931a; */ /* Example: Use Bitcoin orange */
+
+  /* --- Chart Theme Variables (Dark) --- */
+  /* Use same palette for now, adjust if needed */
+  --chart-color-1: #ff00ff; /* Magenta */
+  --chart-color-2: #00ffff; /* Cyan */
+  --chart-color-3: #00ff00; /* Lime Green */
+  --chart-color-4: #ffff00; /* Yellow */
+  --chart-color-5: #ff8c00; /* Dark Orange */
+  --chart-color-6: #ff0000; /* Red */
+  --chart-color-7: #0000ff; /* Blue */
+  --chart-color-btc: #f7931a;
+  --chart-grid-color: rgba(255, 255, 255, 0.3);
+  --chart-axis-color: #ffffff;
+  --chart-text-color: #ffffff;
+  --chart-tooltip-bg: #ff00ff; /* Bright magenta tooltip */
+  --chart-tooltip-text: #ffffff;
+  --chart-tooltip-border: 2px solid #ffffff;
+  --chart-positive-color: var(--chart-color-3);
+  --chart-negative-color: var(--chart-color-6);
+  --chart-warning-color: var(--chart-color-4);
+  --chart-highlight-color: var(--accent-color);
+  --analytics-text-highlight-color: var(--accent-color); /* Changed: Use dark accent color */
+  --chart-line-stroke: var(--chart-color-1);
+  --chart-line-stroke-width: 2px;
+  --chart-line-dot-stroke: var(--chart-line-stroke);
+  --chart-line-dot-stroke-width: 2px;
+  --chart-line-dot-fill: var(--background-primary);
+  --chart-bar-fill: var(--chart-color-1);
+  --chart-area-fill-1: hsla(300, 100%, 50%, 0.5);
+  --chart-area-stroke-1: var(--chart-color-1);
+  --chart-area-stroke-width: 2px;
+  --chart-area-fill-2: hsla(0, 100%, 50%, 0.5);
+  --chart-area-stroke-2: var(--chart-color-6);
+  --chart-pie-slice-1: var(--chart-color-1);
+  --chart-pie-slice-2: var(--chart-color-2);
+  --chart-pie-slice-3: var(--chart-color-3);
+  --chart-pie-slice-4: var(--chart-color-4);
+  --chart-pie-slice-5: var(--chart-color-5);
+  /* Add variables from ExpenseBreakdown */
+  --chart-tooltip-cursor-fill: rgba(128, 128, 128, 0.15);
+  --chart-tick-font-size: 12px;
+  /* New Variables for PieChart */
+  --chart-pie-cell-stroke: var(--background-primary);
+  --chart-pie-cell-stroke-width: 2px;
+  --chart-pie-outer-radius: 120px;
+  --chart-legend-icon-size: 10px;
+}
+
+/* Specific overrides for Neo-Brutalist button theme updates - Placed outside layers */
+html[data-visual-style="neobrutalist"] .themed-button {
+  background: var(--button-bg);
+  border: var(--button-border);
+  box-shadow: var(--button-shadow);
+  backdrop-filter: var(--backdrop-filter);
+}
+
+/* Specific overrides for NeoBrutalist tooltips */
+html[data-visual-style="neobrutalist"] .themed-tooltip {
+  background-color: var(--card-bg); /* Use theme's card bg */
+  color: var(--text-primary); /* Use theme var */
+  border: var(--border-width) solid var(--border-color); /* Use theme vars */
+  box-shadow: var(--shadow-hard); /* Use theme var */
+  border-radius: var(--radius-sharp, 0px);
+  padding: var(--spacing-3, 0.75rem);
+  backdrop-filter: none;
+}
+
+/* No specific dark/light overrides needed if bg/text/border/shadow vars change correctly */
+ 

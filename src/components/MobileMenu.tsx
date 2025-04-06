@@ -60,7 +60,7 @@ export function MobileMenu({ isOpen, onClose, onAddSubscription, onSearch, total
                 onAddSubscription();
                 onClose();
               }}
-              className={`neumorphic-button flex items-center justify-center gap-2 px-6 py-3 rounded-xl ${
+              className={`themed-button flex items-center justify-center gap-2 px-6 py-3 rounded-xl ${
                 isBTC ? 'text-[#f7931a]' : 'text-emerald-400'
               }`}
             >
@@ -113,7 +113,7 @@ export function MobileMenu({ isOpen, onClose, onAddSubscription, onSearch, total
                 signOut();
                 onClose();
               }}
-              className="neumorphic-button flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-red-400"
+              className="themed-button flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-red-400"
             >
               <LogOut size={20} />
               Sign Out

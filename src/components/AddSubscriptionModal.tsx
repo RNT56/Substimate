@@ -223,6 +223,7 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
       url: formattedUrl,
       icon,
       monthlyCost: costInEUR,
+      currency,
       billingPeriod,
       paymentMethod: paymentMethod as PaymentMethod,
       category: category || 'Other',
@@ -253,7 +254,7 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={submitting ? undefined : onClose} />
       <div className="fixed inset-0 flex items-start justify-center p-4 overflow-y-auto">
-        <div className={`neumorphic-card rounded-xl p-8 w-full max-w-md mt-8 mb-20 ${submitting ? 'opacity-70 pointer-events-none' : ''}`}>
+        <div className={`themed-card rounded-xl p-8 w-full max-w-md mt-8 mb-20 ${submitting ? 'opacity-70 pointer-events-none' : ''}`}>
           {submitting && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/10 z-10 rounded-xl">
               <div className="flex flex-col items-center gap-2">
@@ -282,12 +283,12 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
                   onBlur={() => {
                     setTimeout(() => setShowSuggestions(false), 200);
                   }}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   required
                   placeholder="Select or type a service name"
                 />
                 {showSuggestions && (
-                  <div className="absolute z-10 w-full mt-1 neumorphic-card rounded-lg py-2 max-h-60 overflow-auto">
+                  <div className="absolute z-10 w-full mt-1 themed-card rounded-lg py-2 max-h-60 overflow-auto">
                     {filteredSuggestions.map((suggestion) => (
                       <button
                         key={suggestion}
@@ -308,7 +309,7 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
                   type="text"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   required
                 />
               </div>
@@ -321,7 +322,7 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
                     step="0.01"
                     value={monthlyCost}
                     onChange={(e) => setMonthlyCost(e.target.value)}
-                    className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     required
                   />
                 </div>
@@ -330,7 +331,7 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
                   <select
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value as Currency)}
-                    className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   >
                     {CURRENCIES.map(curr => (
                       <option key={curr} value={curr}>{curr}</option>
@@ -353,8 +354,8 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
                   <label className="block text-sm font-medium mb-2 text-theme-secondary">Billing Period</label>
                   <select
                     value={billingPeriod}
-                    onChange={(e) => setBillingPeriod(e.target.value)}
-                    className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    onChange={(e) => setBillingPeriod(e.target.value as BillingPeriod)}
+                    className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   >
                     <option value="monthly">Monthly</option>
                     <option value="yearly">Yearly</option>
@@ -373,12 +374,12 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
                     onBlur={() => {
                       setTimeout(() => setShowPaymentMethods(false), 200);
                     }}
-                    className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     placeholder="Select or type a payment method"
                     required
                   />
                   {showPaymentMethods && (
-                    <div className={`absolute z-10 w-full mt-1 neumorphic-card rounded-lg py-2 overflow-auto ${
+                    <div className={`absolute z-10 w-full mt-1 themed-card rounded-lg py-2 overflow-auto ${
                       isMobile ? 'max-h-48' : 'max-h-60'
                     }`}>
                       {filteredPaymentMethods.map((method) => (
@@ -407,12 +408,12 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
                     onBlur={() => {
                       setTimeout(() => setShowCategories(false), 200);
                     }}
-                    className="w-full neumorphic-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     placeholder="Select or type a category"
                     required
                   />
                   {showCategories && (
-                    <div className={`absolute z-10 w-full mt-1 neumorphic-card rounded-lg py-2 overflow-auto ${
+                    <div className={`absolute z-10 w-full mt-1 themed-card rounded-lg py-2 overflow-auto ${
                       isMobile ? 'max-h-48' : 'max-h-60'
                     }`}>
                       {filteredCategories.map((cat) => (
@@ -435,13 +436,13 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
               <button
                 type="button"
                 onClick={onClose}
-                className="neumorphic-button px-6 py-3 rounded-xl text-theme-secondary hover:text-theme-primary"
+                className="themed-button px-6 py-3 rounded-xl text-theme-secondary hover:text-theme-primary"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="neumorphic-button px-6 py-3 rounded-xl highlight-color hover:opacity-80"
+                className="themed-button px-6 py-3 rounded-xl highlight-color hover:opacity-80"
               >
                 Add Subscription
               </button>

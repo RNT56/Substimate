@@ -1,0 +1,224 @@
+/* Minimal Theme - Reworked & Restructured */
+
+:root[data-visual-style="minimal"][data-theme="light"] {
+  /* --- Base Overrides (Light) --- */
+  --bg-gradient-from: #ffffff;    /* Pure white */
+  --bg-gradient-to: #ffffff;      /* Pure white */
+  --text-primary: #1a1a1a;        /* Near black */
+  --text-secondary: #5a5a5a;      /* Dark grey */
+  --text-tertiary: #8c8c8c;       /* Medium grey */
+  --border-color: #e0e0e0;        /* Light grey */
+  --background-primary: #ffffff;  /* White */
+  --background-secondary: #f5f5f5;/* Very light grey */
+  --title-gradient: none;          /* No gradient */
+  --highlight-color-default: #3498db; /* Default blue highlight */
+
+  /* --- Component Variables (Light) --- */
+  --card-bg: var(--background-primary);
+  --card-hover: var(--background-secondary);
+  --card-shadow: none;
+  --card-border: 1px solid var(--border-color);
+  --button-bg: transparent;
+  --button-shadow: none;
+  --button-border: 1px solid var(--border-color); /* Default border */
+  --input-bg: var(--background-secondary);
+  --input-shadow: none;
+  --input-border: 1px solid var(--border-color);
+  --icon-bg: transparent;
+  --icon-shadow: none;
+  --icon-border: none;
+  --backdrop-filter: none;
+
+  /* --- Chart Theme Variables (Light) --- */
+  --chart-color-1: #6b7280; /* Gray */
+  --chart-color-2: #9ca3af; /* Lighter Gray */
+  --chart-color-3: #4b5563; /* Darker Gray */
+  --chart-color-4: #d1d5db; /* Very Light Gray */
+  --chart-color-5: #374151; /* Darkest Gray */
+  --chart-color-6: #ef4444; /* Keep Red for negative */
+  --chart-color-7: #ffc767; /* Keep Amber for warning */
+  --chart-color-btc: #f7931a;
+  --chart-grid-color: var(--border-color); /* Subtle grid */
+  --chart-axis-color: var(--text-tertiary);
+  --chart-text-color: var(--text-secondary);
+  --chart-tooltip-bg: var(--background-secondary);
+  --chart-tooltip-text: var(--text-primary);
+  --chart-tooltip-border: 1px solid var(--border-color);
+  --chart-positive-color: #10b981; /* Keep subtle green for positive */
+  --chart-negative-color: var(--chart-color-6);
+  --chart-warning-color: var(--chart-color-7);
+  --chart-highlight-color: var(--highlight-color);
+  --analytics-text-highlight-color: #8a8a8a; /* Added: Use positive green as default */
+  --chart-line-stroke: var(--chart-color-1);
+  --chart-line-stroke-width: 1px; /* Thin lines */
+  --chart-line-dot-stroke: var(--chart-line-stroke);
+  --chart-line-dot-stroke-width: 1px;
+  --chart-line-dot-fill: var(--background-primary);
+  --chart-bar-fill: var(--chart-color-1); /* Solid gray */
+  --chart-area-fill-1: hsla(215, 14%, 47%, 0.2); /* Very subtle area fill */
+  --chart-area-stroke-1: var(--chart-color-1);
+  --chart-area-stroke-width: 1px;
+  --chart-area-fill-2: hsla(0, 84%, 60%, 0.2);
+  --chart-area-stroke-2: var(--chart-color-6);
+  --chart-pie-slice-1: var(--chart-color-1);
+  --chart-pie-slice-2: var(--chart-color-2);
+  --chart-pie-slice-3: var(--chart-color-3);
+  --chart-pie-slice-4: var(--chart-color-4);
+  --chart-pie-slice-5: var(--chart-color-5);
+  /* Add variables from ExpenseBreakdown */
+  --chart-tooltip-cursor-fill: rgba(209, 213, 219, 0.2);
+  --chart-tick-font-size: 12px;
+  /* New Variables for PieChart */
+  --chart-pie-cell-stroke: var(--background-primary);
+  --chart-pie-cell-stroke-width: 2px;
+  --chart-pie-outer-radius: 120px;
+  --chart-legend-icon-size: 10px;
+
+  /* --- Tooltip Fallback Overrides (Light) --- */
+  --tooltip-bg: var(--background-secondary);
+  --tooltip-text: var(--text-primary);
+  --tooltip-border: 1px solid var(--border-color);
+}
+
+:root[data-visual-style="minimal"][data-theme="dark"] {
+  /* --- Base Overrides (Dark) --- */
+  --bg-gradient-from: #1f1f1f;    /* Dark grey */
+  --bg-gradient-to: #1f1f1f;      /* Dark grey */
+  --text-primary: #e6e6e6;        /* Light gray */
+  --text-secondary: #a6a6a6;      /* Medium gray */
+  --text-tertiary: #737373;       /* Darker gray */
+  --border-color: #3a3a3a;        /* Dark border */
+  --background-primary: #262626;  /* Slightly lighter dark grey */
+  --background-secondary: #1f1f1f;/* Match background to base */
+  --title-gradient: none;
+  --highlight-color-default: #3498db; /* Keep blue consistent */
+
+  /* --- Component Variables (Dark) --- */
+  --card-bg: var(--background-primary);
+  --card-hover: var(--background-secondary);
+  --card-shadow: none;
+  --card-border: 1px solid var(--border-color);
+  --button-bg: transparent;
+  --button-shadow: none;
+  --button-border: 1px solid var(--border-color); /* Default border */
+  --input-bg: var(--background-secondary);
+  --input-shadow: none;
+  --input-border: 1px solid var(--border-color);
+  --icon-bg: transparent;
+  --icon-shadow: none;
+  --icon-border: none;
+  --backdrop-filter: none;
+
+  /* --- Chart Theme Variables (Dark - Reuse light palette) --- */
+  --chart-color-1: #9ca3af; /* Light Gray */
+  --chart-color-2: #6b7280; /* Medium Gray */
+  --chart-color-3: #d1d5db; /* Very Light Gray */
+  --chart-color-4: #4b5563; /* Dark Gray */
+  --chart-color-5: #e5e7eb; /* Almost White */
+  --chart-color-6: #fd9e9e; /* Keep light Red for negative */
+  --chart-color-7: #f5dc9c; /* Keep light Amber for warning */
+  --chart-color-btc: #f7931a;
+  --chart-grid-color: var(--border-color);
+  --chart-axis-color: var(--text-tertiary);
+  --chart-text-color: var(--text-secondary);
+  --chart-tooltip-bg: var(--background-secondary);
+  --chart-tooltip-text: var(--text-primary);
+  --chart-tooltip-border: 1px solid var(--border-color);
+  --chart-positive-color: #d4d4d4; /* Keep light green for positive */
+  --chart-negative-color: var(--chart-color-6);
+  --chart-warning-color: var(--chart-color-7);
+  --chart-highlight-color: var(--highlight-color);
+  --analytics-text-highlight-color: #eaeaea; /* Added: Use positive green as default */
+  --chart-line-stroke: var(--chart-color-1);
+  --chart-line-stroke-width: 1px;
+  --chart-line-dot-stroke: var(--chart-line-stroke);
+  --chart-line-dot-stroke-width: 1px;
+  --chart-line-dot-fill: var(--background-primary);
+  --chart-bar-fill: var(--chart-color-1);
+  --chart-area-fill-1: hsla(215, 14%, 65%, 0.2); /* Subtle area fill */
+  --chart-area-stroke-1: var(--chart-color-1);
+  --chart-area-stroke-width: 1px;
+  --chart-area-fill-2: hsla(0, 91%, 71%, 0.2);
+  --chart-area-stroke-2: var(--chart-color-6);
+  --chart-pie-slice-1: var(--chart-color-1);
+  --chart-pie-slice-2: var(--chart-color-2);
+  --chart-pie-slice-3: var(--chart-color-3);
+  --chart-pie-slice-4: var(--chart-color-4);
+  --chart-pie-slice-5: var(--chart-color-5);
+  /* Add variables from ExpenseBreakdown */
+  --chart-tooltip-cursor-fill: rgba(75, 85, 99, 0.2);
+  --chart-tick-font-size: 12px;
+  /* New Variables for PieChart */
+  --chart-pie-cell-stroke: var(--background-primary);
+  --chart-pie-cell-stroke-width: 2px;
+  --chart-pie-outer-radius: 120px;
+  --chart-legend-icon-size: 10px;
+
+  /* --- Tooltip Fallback Overrides (Dark) --- */
+  --tooltip-bg: var(--background-secondary);
+  --tooltip-text: var(--text-primary);
+  --tooltip-border: 1px solid var(--border-color);
+}
+
+/* Apply body background override specifically for Minimal */
+body[data-visual-style="minimal"] {
+  background: linear-gradient(145deg, var(--bg-gradient-from), var(--bg-gradient-to));
+}
+
+/* --- Minimal Specific Component Overrides (Outside :root) --- */
+
+/* Ensure title text color is correct (no gradient) */
+html[data-visual-style="minimal"] .title-gradient {
+  color: var(--text-primary); /* Use defined text color */
+  background: none;
+  -webkit-text-fill-color: currentcolor;
+}
+
+/* Specific overrides for Minimal themed cards - REMOVED */
+/* The base .themed-card rule in index.css will use the overridden variables */
+
+/* Specific overrides for Minimal themed buttons */
+html[data-visual-style="minimal"] .themed-button {
+  background: var(--button-bg);
+  box-shadow: var(--button-shadow);
+  border: var(--button-border);
+  color: var(--text-secondary);
+  transition: color 0.2s, border-color 0.2s;
+}
+html[data-visual-style="minimal"] .themed-button:hover {
+  color: var(--text-primary);
+  border-color: var(--text-primary); /* Change border on hover */
+  opacity: 1; /* Override default opacity change if desired */
+}
+/* Highlight active/selected buttons using border-highlight class */
+html[data-visual-style="minimal"] .themed-button.border-highlight {
+  color: var(--highlight-color); /* Use the current highlight color */
+  border-color: var(--highlight-color);
+}
+html[data-visual-style="minimal"] .themed-button.border-highlight:hover {
+  opacity: 0.8; /* Slightly different hover for active/highlighted */
+}
+
+/* Specific overrides for Minimal themed inputs */
+html[data-visual-style="minimal"] .themed-input {
+  background: var(--input-bg);
+  border: var(--input-border);
+  box-shadow: var(--input-shadow);
+  color: var(--text-primary);
+  backdrop-filter: var(--backdrop-filter);
+}
+html[data-visual-style="minimal"] .themed-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Specific overrides for Minimal themed tooltips */
+html[data-visual-style="minimal"] .themed-tooltip {
+  background-color: var(--tooltip-bg); /* Use the fallback override defined in :root */
+  color: var(--tooltip-text);         /* Use the fallback override defined in :root */
+  border: var(--tooltip-border);
+  box-shadow: none;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  backdrop-filter: none;
+} 

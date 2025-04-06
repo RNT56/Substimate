@@ -74,11 +74,7 @@ export function FlowTooltip({ link, mouseX, mouseY, onClose }: FlowTooltipProps)
 
   return (
     <div 
-      className={`
-        fixed z-50 w-96 tooltip
-        neumorphic-card rounded-lg p-4 backdrop-blur-md border
-        ${isDark ? 'bg-gray-900/95 border-gray-700' : 'bg-white/95 border-gray-200'}
-      `}
+      className="fixed z-50 w-96 themed-tooltip"
       style={{
         left: `${mouseX + 16}px`,
         top: `${mouseY}px`,
@@ -134,7 +130,7 @@ export function FlowTooltip({ link, mouseX, mouseY, onClose }: FlowTooltipProps)
                 return (
                   <div 
                     key={i} 
-                    className="text-sm p-4 rounded-lg neumorphic-card"
+                    className="text-sm p-4 rounded-lg themed-card"
                   >
                     <div className="flex flex-col gap-1 mb-3">
                       <div className="flex justify-between items-start">

@@ -1,0 +1,154 @@
+/* Brutalist Light */
+:root[data-visual-style="brutalist"][data-theme="light"] {
+  /* Text Colors (Default Light) */
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+
+  --card-bg: var(--background-primary);
+  --card-hover: var(--background-secondary);
+  --card-shadow: 4px 4px 0px var(--text-primary);
+  --card-border: 2px solid var(--text-primary);
+  --button-bg: #ffffff;
+  --button-shadow: 3px 3px 0px #1e293b;
+  --button-border: 2px solid #1e293b;
+  --input-bg: var(--background-primary);
+  --input-shadow: none;
+  --input-border: 2px solid var(--text-primary);
+  --icon-bg: transparent;
+  --icon-shadow: none;
+  --icon-border: none;
+  --backdrop-filter: none;
+
+  /* --- Brutalist Light Mode Chart Variables --- */
+  --chart-color-1: #16a34a; /* Strong Green */
+  --chart-color-2: #d97706; /* Strong Amber */
+  --chart-color-3: #2563eb; /* Strong Blue */
+  --chart-color-4: #7e22ce; /* Strong Purple */
+  --chart-color-5: #db2777; /* Strong Pink */
+  --chart-color-6: #dc2626; /* Strong Red */
+  --chart-color-7: #ea580c; /* Strong Orange */
+  --chart-color-btc: #f7931a;
+  --chart-grid-color: var(--text-tertiary); /* Simple grid */
+  --chart-axis-color: var(--text-primary); /* High contrast axis */
+  --chart-text-color: var(--text-primary);
+  --chart-tooltip-bg: var(--tooltip-bg);
+  --chart-tooltip-text: var(--tooltip-text);
+  --chart-positive-color: var(--chart-color-1);
+  --chart-negative-color: var(--chart-color-6);
+  --chart-warning-color: var(--chart-color-2);
+  --chart-highlight-color: var(--highlight-color);
+  --analytics-text-highlight-color: #16a34a; /* Added: Use strong green */
+  --chart-line-stroke: var(--chart-color-1);
+  --chart-line-stroke-width: 2px; /* Thicker lines */
+  --chart-line-dot-stroke: var(--chart-line-stroke);
+  --chart-line-dot-stroke-width: 2px;
+  --chart-line-dot-fill: var(--background-primary);
+  --chart-bar-fill: var(--chart-color-1); /* Solid fill */
+  --chart-area-fill-1: var(--chart-color-1);
+  --chart-area-stroke-1: var(--chart-color-1);
+  --chart-area-stroke-width: 2px;
+  --chart-area-fill-2: var(--chart-color-6);
+  --chart-area-stroke-2: var(--chart-color-6);
+  --chart-pie-slice-1: var(--chart-color-1);
+  --chart-pie-slice-2: var(--chart-color-2);
+  --chart-pie-slice-3: var(--chart-color-3);
+  --chart-pie-slice-4: var(--chart-color-4);
+  --chart-pie-slice-5: var(--chart-color-5);
+  --chart-tooltip-cursor-fill: rgba(128, 128, 128, 0.1); /* Simple gray fill */
+  --chart-tick-font-size: 12px;
+  /* New Variables for PieChart */
+  --chart-pie-cell-stroke: var(--background-primary);
+  --chart-pie-cell-stroke-width: 2px;
+  --chart-pie-outer-radius: 120px;
+  --chart-legend-icon-size: 10px;
+}
+
+/* Brutalist Dark */
+:root[data-visual-style="brutalist"][data-theme="dark"] {
+  /* Text Colors (Default Dark) */
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-tertiary: #6b7280;
+
+  --card-bg: var(--background-primary);
+  --card-hover: var(--background-secondary);
+  --card-shadow: 4px 4px 0px var(--text-primary);
+  --card-border: 2px solid var(--text-primary);
+  --button-bg: #1a1a1a;
+  --button-shadow: 3px 3px 0px #f1f5f9;
+  --button-border: 2px solid #f1f5f9;
+  --input-bg: var(--background-primary);
+  --input-shadow: none;
+  --input-border: 2px solid var(--text-primary);
+  --icon-bg: transparent;
+  --icon-shadow: none;
+  --icon-border: none;
+  --backdrop-filter: none;
+
+  /* --- Brutalist Dark Mode Chart Variables --- */
+  /* Keep colors strong, maybe slightly adjusted for dark bg if needed */
+  --chart-color-1: #22c55e; /* Bright Green */
+  --chart-color-2: #f59e0b; /* Bright Amber */
+  --chart-color-3: #3b82f6; /* Bright Blue */
+  --chart-color-4: #a855f7; /* Bright Purple */
+  --chart-color-5: #ec4899; /* Bright Pink */
+  --chart-color-6: #ef4444; /* Bright Red */
+  --chart-color-7: #f97316; /* Bright Orange */
+  --chart-color-btc: #f7931a;
+  --chart-grid-color: var(--text-tertiary);
+  --chart-axis-color: var(--text-primary);
+  --chart-text-color: var(--text-primary);
+  --chart-tooltip-bg: var(--tooltip-bg);
+  --chart-tooltip-text: var(--tooltip-text);
+  --chart-positive-color: var(--chart-color-1);
+  --chart-negative-color: var(--chart-color-6);
+  --chart-warning-color: var(--chart-color-2);
+  --chart-highlight-color: var(--highlight-color);
+  --analytics-text-highlight-color: #22c55e; /* Added: Use bright green */
+  --chart-line-stroke: var(--chart-color-1);
+  --chart-line-stroke-width: 2px;
+  --chart-line-dot-stroke: var(--chart-line-stroke);
+  --chart-line-dot-stroke-width: 2px;
+  --chart-line-dot-fill: var(--background-primary);
+  --chart-bar-fill: var(--chart-color-1);
+  --chart-area-fill-1: var(--chart-color-1);
+  --chart-area-stroke-1: var(--chart-color-1);
+  --chart-area-stroke-width: 2px;
+  --chart-area-fill-2: var(--chart-color-6);
+  --chart-area-stroke-2: var(--chart-color-6);
+  --chart-pie-slice-1: var(--chart-color-1);
+  --chart-pie-slice-2: var(--chart-color-2);
+  --chart-pie-slice-3: var(--chart-color-3);
+  --chart-pie-slice-4: var(--chart-color-4);
+  --chart-pie-slice-5: var(--chart-color-5);
+  --chart-tooltip-cursor-fill: rgba(128, 128, 128, 0.15); /* Slightly more visible */
+  --chart-tick-font-size: 12px;
+  /* New Variables for PieChart */
+  --chart-pie-cell-stroke: var(--background-primary);
+  --chart-pie-cell-stroke-width: 2px;
+  --chart-pie-outer-radius: 120px;
+  --chart-legend-icon-size: 10px;
+}
+
+/* Specific overrides for Brutalist button theme updates - Placed outside layers */
+html[data-visual-style="brutalist"] .themed-button {
+  background: var(--button-bg);
+  border: var(--button-border);
+  box-shadow: var(--button-shadow);
+  backdrop-filter: var(--backdrop-filter);
+}
+
+/* Specific overrides for Brutalist tooltips */
+html[data-visual-style="brutalist"] .themed-tooltip {
+  background-color: var(--card-bg); /* Use theme's card bg */
+  color: var(--text-primary); /* Use theme var */
+  border: var(--border-width) solid var(--border-color); /* Use theme vars */
+  box-shadow: none;
+  border-radius: 0px;
+  padding: var(--spacing-3, 0.75rem);
+  backdrop-filter: none;
+}
+
+/* No specific dark/light overrides needed if bg/text/border vars change correctly */
+

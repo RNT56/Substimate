@@ -1,75 +1,120 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import type { CategoryAnalytics } from '../../types';
-
-const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
 interface Props {
   data: CategoryAnalytics[];
 }
 
 export function CategoryDistribution({ data }: Props) {
-  const { theme } = useTheme();
+  const { theme, visualStyle } = useTheme();
   const { displayCurrency, formatAmount } = useCurrency();
   const isDark = theme === 'dark';
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const isBTC = displayCurrency === 'BTC';
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [computedStyles, setComputedStyles] = useState({
+    pieCellStroke: '#FFFFFF',
+    pieCellStrokeWidth: 2,
+    pieOuterRadius: 120,
+    legendIconSize: 10,
+    btcColor: '#f7931a',
+    pieSlice1: '#8884d8',
+    pieSlice2: '#82ca9d',
+    pieSlice3: '#ffc658',
+    pieSlice4: '#ff8042',
+    pieSlice5: '#0088FE',
+    // Add any other necessary styles here
+  });
+
+  useEffect(() => {
+    if (chartRef.current) {
+      const styles = getComputedStyle(chartRef.current);
+      const parsePixelValue = (val: string | null, defaultValue: number) => {
+        return val ? parseInt(val.replace('px', ''), 10) || defaultValue : defaultValue;
+      };
+      setComputedStyles({
+        pieCellStroke: styles.getPropertyValue('--chart-pie-cell-stroke').trim() || (isDark ? '#1F2937' : '#FFFFFF'),
+        pieCellStrokeWidth: parseInt(styles.getPropertyValue('--chart-pie-cell-stroke-width').trim()) || 2,
+        pieOuterRadius: parsePixelValue(styles.getPropertyValue('--chart-pie-outer-radius').trim(), 120),
+        legendIconSize: parsePixelValue(styles.getPropertyValue('--chart-legend-icon-size').trim(), 10),
+        btcColor: styles.getPropertyValue('--chart-color-btc').trim() || '#f7931a',
+        pieSlice1: styles.getPropertyValue('--chart-pie-slice-1').trim() || '#8884d8',
+        pieSlice2: styles.getPropertyValue('--chart-pie-slice-2').trim() || '#82ca9d',
+        pieSlice3: styles.getPropertyValue('--chart-pie-slice-3').trim() || '#ffc658',
+        pieSlice4: styles.getPropertyValue('--chart-pie-slice-4').trim() || '#ff8042',
+        pieSlice5: styles.getPropertyValue('--chart-pie-slice-5').trim() || '#0088FE',
+      });
+    }
+  }, [theme, visualStyle, isDark]);
+
+  const CustomTooltip = ({ active, payload }: any) => {
+    const currentTheme = theme;
+    const currentStyle = visualStyle;
+    if (active && payload && payload.length) {
+      const entry = payload[0].payload;
+      return (
+        <div 
+          className="themed-tooltip" 
+          data-theme={currentTheme}
+          data-visual-style={currentStyle}
+        >
+          <p className="font-semibold mb-1 text-chart-tooltip-text">{entry.name}</p>
+          <p className="text-theme-secondary">
+            Count: <span className="text-chart-highlight">{entry.count}</span>
+          </p>
+          <p className="text-theme-secondary">
+            Total Cost: <span className={isBTC ? 'text-chart-btc' : 'text-chart-highlight'}>
+              {formatAmount(Number(entry.totalCost ?? 0), displayCurrency)}
+            </span>
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
-    <div className="h-full">
+    <div ref={chartRef} className="themed-card p-6 rounded-lg shadow-md overflow-hidden">
       <h2 className="text-xl font-semibold mb-4 text-theme-primary">Category Distribution</h2>
       <ResponsiveContainer width="100%" height={400}>
         <PieChart>
+          <Tooltip content={<CustomTooltip />} />
           <Pie
             data={data}
-            dataKey="totalCost"
-            nameKey="name"
             cx="50%"
             cy="50%"
-            outerRadius={150}
-            label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+            labelLine={false}
+            outerRadius={computedStyles.pieOuterRadius}
+            fill="#8884d8"
+            dataKey="totalCost"
+            nameKey="name"
+            onMouseEnter={(_, index) => setActiveIndex(index)}
+            onMouseLeave={() => setActiveIndex(null)}
           >
-            {data.map((entry, index) => (
-              <Cell 
-                key={entry.name} 
-                fill={isBTC ? '#f7931a' : COLORS[index % COLORS.length]} 
-              />
-            ))}
-          </Pie>
-          <Tooltip
-            content={({ active, payload }) => {
-              if (!active || !payload?.[0]) return null;
-              const data = payload[0].payload;
-              
+            {data.map((entry, index) => {
+              const colorIndex = (index % 5) + 1;
+              const fillColor = isBTC ? computedStyles.btcColor :
+                                (computedStyles as any)[`pieSlice${colorIndex}`] || '#8884d8';
               return (
-                <div className="p-4 rounded-lg shadow-lg backdrop-blur-md bg-gray-900/95 border border-gray-700">
-                  <p className="font-medium text-base mb-2">{data.name}</p>
-                  <div className="space-y-2">
-                    <div className="flex justify-between gap-4">
-                      <span className="text-theme-secondary">Monthly Cost:</span>
-                      <span className="text-emerald-500">
-                        {formatAmount(data.totalCost, displayCurrency)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <span className="text-theme-secondary">Services:</span>
-                      <span className="text-emerald-500">
-                        {data.subscriptionCount}
-                      </span>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <span className="text-theme-secondary">Avg. Cost:</span>
-                      <span className="text-emerald-500">
-                        {formatAmount(data.averageCostPerService, displayCurrency)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                <Cell
+                  key={entry.name}
+                  fill={fillColor}
+                  opacity={activeIndex === null || activeIndex === index ? 1 : 0.6}
+                  stroke={computedStyles.pieCellStroke}
+                  strokeWidth={computedStyles.pieCellStrokeWidth}
+                />
               );
-            }}
+            })}
+          </Pie>
+          <Legend 
+            iconSize={computedStyles.legendIconSize}
+            layout="vertical" 
+            verticalAlign="middle" 
+            align="right" 
           />
-          <Legend />
         </PieChart>
       </ResponsiveContainer>
     </div>

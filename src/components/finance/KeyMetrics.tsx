@@ -47,7 +47,7 @@ export function KeyMetrics({ totalAssets, monthlyIncome, totalMonthlyExpenses, s
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {metrics.map((metric) => (
-        <div key={metric.title} className="neumorphic-card rounded-xl p-6">
+        <div key={metric.title} className="themed-card rounded-xl p-6">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-theme-secondary mb-2">{metric.title}</p>

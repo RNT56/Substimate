@@ -5,9 +5,6 @@ import { useCurrency } from '../../contexts/CurrencyContext';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO, isWithinInterval } from 'date-fns';
 import type { FixedExpense, VariableExpense, FinancialAsset } from '../../types';
 
-// Colors for the pie chart slices
-const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#0EA5E9', '#14B8A6', '#F97316', '#8B5CF6'];
-
 type TimeFrame = 'week' | 'month' | 'year';
 type ChartType = 'expenses' | 'assets';
 
@@ -19,7 +16,7 @@ interface Props {
 }
 
 export function CategoryDistributionChart({ fixedExpenses, variableExpenses, assets, type }: Props) {
-  const { theme } = useTheme();
+  const { theme, visualStyle } = useTheme();
   const { displayCurrency, formatAmount } = useCurrency();
   const [timeframe, setTimeframe] = useState<TimeFrame>('month');
   const isDark = theme === 'dark';
@@ -111,8 +108,30 @@ export function CategoryDistributionChart({ fixedExpenses, variableExpenses, ass
     }
   }, [type, fixedExpenses, variableExpenses, assets, timeframe, dateRange]);
 
+  const CustomTooltip = ({ active, payload }: any) => {
+    // Get theme/style from parent scope
+    const currentTheme = theme;
+    const currentStyle = visualStyle;
+    if (active && payload && payload.length) {
+      const entry = payload[0].payload;
+      return (
+        <div 
+          className="themed-tooltip" 
+          data-theme={currentTheme} // Apply theme
+          data-visual-style={currentStyle} // Apply style
+        >
+          <div className="font-semibold mb-1">{entry.name}</div>
+          <div>Amount: <span className={isBTC ? 'text-chart-btc' : 'text-chart-highlight'}>
+            {formatAmount(Number(entry.value ?? 0), displayCurrency)}
+          </span></div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div className="neumorphic-card rounded-xl p-6">
+    <div className="themed-card rounded-xl p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-theme-primary">
           {type === 'expenses' ? 'Expense Categories' : 'Asset Distribution'}
@@ -144,51 +163,27 @@ export function CategoryDistributionChart({ fixedExpenses, variableExpenses, ass
         <div className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
+              <Tooltip content={<CustomTooltip />} />
               <Pie
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                outerRadius={150}
+                labelLine={false}
+                outerRadius={100}
+                fill="#8884d8"
                 dataKey="value"
                 nameKey="name"
-                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
               >
                 {chartData.map((entry, index) => (
-                  <Cell 
-                    key={entry.name} 
-                    fill={isBTC ? '#f7931a' : COLORS[index % COLORS.length]} 
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={isBTC ? 'var(--chart-color-btc)' : `var(--chart-pie-slice-${(index % 5) + 1})`}
+                    stroke={isDark ? '#1F2937' : '#FFFFFF'}
+                    strokeWidth={1}
                   />
                 ))}
               </Pie>
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (!active || !payload?.[0]) return null;
-                  const data = payload[0].payload;
-                  
-                  return (
-                    <div className="neumorphic-card rounded-lg p-4">
-                      <p className="font-medium mb-2">{data.name}</p>
-                      <div className="space-y-2">
-                        <div className="flex justify-between gap-4">
-                          <span className="text-theme-secondary">
-                            {type === 'expenses' ? 'Amount:' : 'Value:'}
-                          </span>
-                          <span className={isBTC ? 'text-[#f7931a]' : 'text-emerald-400'}>
-                            {formatAmount(data.value, displayCurrency)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-theme-secondary">Count:</span>
-                          <span className={isBTC ? 'text-[#f7931a]' : 'text-emerald-400'}>
-                            {data.count}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }}
-              />
-              <Legend />
+              <Legend iconSize={10} layout="vertical" verticalAlign="middle" align="right" />
             </PieChart>
           </ResponsiveContainer>
         </div>

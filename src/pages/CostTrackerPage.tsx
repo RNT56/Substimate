@@ -52,8 +52,8 @@ export function CostTrackerPage() {
         })
         .reduce((sum, sub) => {
           const monthlyCost = sub.billingPeriod === 'yearly' 
-            ? sub.monthlyCost / 12 
-            : sub.monthlyCost;
+            ? (sub.monthlyCost || 0) / 12 
+            : (sub.monthlyCost || 0);
           return sum + monthlyCost;
         }, 0);
 
@@ -79,7 +79,7 @@ export function CostTrackerPage() {
           count: 0
         };
       }
-      const monthlyCost = sub.billingPeriod === 'yearly' ? sub.monthlyCost / 12 : sub.monthlyCost;
+      const monthlyCost = sub.billingPeriod === 'yearly' ? (sub.monthlyCost || 0) / 12 : (sub.monthlyCost || 0);
       acc[sub.category].value += convertAmount(monthlyCost, 'EUR', displayCurrency);
       acc[sub.category].count += 1;
       return acc;
@@ -110,7 +110,7 @@ export function CostTrackerPage() {
       name: 'Subscriptions',
       value: convertAmount(
         subscriptions.reduce((sum, sub) => {
-          const monthlyCost = sub.billingPeriod === 'yearly' ? sub.monthlyCost / 12 : sub.monthlyCost;
+          const monthlyCost = sub.billingPeriod === 'yearly' ? (sub.monthlyCost || 0) / 12 : (sub.monthlyCost || 0);
           return sum + monthlyCost;
         }, 0),
         'EUR',
@@ -140,7 +140,7 @@ export function CostTrackerPage() {
         <ExpenseBreakdown data={expenseBreakdown} />
         
         {/* Cost Predictions Placeholder */}
-        <div className="neumorphic-card rounded-xl p-6">
+        <div className="themed-card rounded-xl p-6">
           <h2 className="text-xl font-bold mb-6 text-theme-primary">Cost Predictions</h2>
           <div className="h-[400px] flex items-center justify-center">
             <p className="text-theme-secondary">
@@ -155,7 +155,11 @@ export function CostTrackerPage() {
         incomeSources={incomeSources}
         fixedExpenses={fixedExpenses}
         variableExpenses={variableExpenses}
-        subscriptions={subscriptions}
+        subscriptions={subscriptions.map(sub => ({ 
+          ...sub, 
+          monthlyCost: sub.monthlyCost || 0, 
+          usageState: sub.usageState || '' 
+        }))}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
@@ -11,10 +11,52 @@ interface Props {
 }
 
 export function ExpenseBreakdown({ data }: Props) {
-  const { theme } = useTheme();
+  const { theme, visualStyle } = useTheme();
   const { displayCurrency, formatAmount } = useCurrency();
   const isDark = theme === 'dark';
   const isBTC = displayCurrency === 'BTC';
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [computedStyles, setComputedStyles] = useState({
+    gridStroke: '#e2e8f0',
+    gridDasharray: '3 3',
+    axisStroke: '#475569',
+    tickFill: '#475569',
+    tickFontSize: '12px',
+    tooltipCursorFill: 'rgba(156, 163, 175, 0.1)',
+    barFill: 'var(--chart-bar-fill)',
+    btcBarFill: 'var(--chart-color-btc)',
+    // barRadius: [4, 4, 0, 0], // Still needs JS parsing
+  });
+
+  useEffect(() => {
+    if (chartRef.current) {
+      const styles = getComputedStyle(chartRef.current);
+      // Helper to parse the bar radius (adjust if format changes)
+      const parseRadius = (radiusString: string | null): number[] => {
+        if (!radiusString) return [4, 4, 0, 0];
+        const parts = radiusString.trim().split(' ').map(p => parseInt(p.replace('px', ''), 10));
+        // Assuming top-left, top-right, bottom-right, bottom-left CSS order
+        // Recharts needs [tl, tr, bl, br] - seems CSS order maps directly here?
+        // Double check Recharts docs if needed for `radius` prop format
+        if (parts.length === 4 && parts.every(p => !isNaN(p))) {
+          return parts; // Assuming [tl, tr, br, bl] order
+        }
+        return [4, 4, 0, 0]; // Default fallback
+      };
+
+      setComputedStyles({
+        gridStroke: styles.getPropertyValue('--chart-grid-color').trim() || (theme === 'dark' ? '#374151' : '#e2e8f0'),
+        gridDasharray: styles.getPropertyValue('--chart-grid-stroke-dasharray').trim().replace(/"/g, '') || '3 3',
+        axisStroke: styles.getPropertyValue('--chart-axis-color').trim() || (theme === 'dark' ? '#9CA3AF' : '#475569'),
+        tickFill: styles.getPropertyValue('--chart-text-color').trim() || (theme === 'dark' ? '#9CA3AF' : '#475569'),
+        tickFontSize: styles.getPropertyValue('--chart-tick-font-size').trim() || '12px',
+        tooltipCursorFill: styles.getPropertyValue('--chart-tooltip-cursor-fill').trim() || 'rgba(156, 163, 175, 0.1)',
+        barFill: styles.getPropertyValue('--chart-bar-fill').trim() || 'var(--chart-color-1)', // Fallback needed?
+        btcBarFill: styles.getPropertyValue('--chart-color-btc').trim() || '#f7931a',
+        // barRadius: parseRadius(styles.getPropertyValue('--chart-bar-radius')), // Use parser
+      });
+    }
+  }, [theme, visualStyle]);
 
   // Calculate the maximum value for better y-axis scaling
   const maxValue = Math.max(...data.map(d => d.value));
@@ -56,32 +98,52 @@ export function ExpenseBreakdown({ data }: Props) {
   // Sort data by value in descending order
   const sortedData = [...data].sort((a, b) => b.value - a.value);
 
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    // Get theme/style from parent scope
+    const currentTheme = theme;
+    const currentStyle = visualStyle;
+    if (active && payload && payload.length) {
+      const entry = payload[0];
+      return (
+        <div 
+          className="themed-tooltip" 
+          data-theme={currentTheme} // Apply theme
+          data-visual-style={currentStyle} // Apply style
+        >
+          <div className="font-semibold mb-1">{label}</div>
+          <p>Amount: <span className="font-medium">{formatAmount(Number(entry.value ?? 0), displayCurrency)}</span></p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div className="neumorphic-card rounded-xl p-6">
+    <div ref={chartRef} className="themed-card rounded-xl p-6" data-theme={theme} data-visual-style={visualStyle}>
       <h2 className="text-xl font-bold mb-6 text-theme-primary">Expense Breakdown</h2>
       <div className="h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={sortedData}>
+          <BarChart data={sortedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid 
-              strokeDasharray="3 3" 
-              stroke={isDark ? '#374151' : '#e2e8f0'} 
+              strokeDasharray={computedStyles.gridDasharray}
+              stroke={computedStyles.gridStroke}
               vertical={false}
             />
             <XAxis 
               dataKey="name" 
-              stroke={isDark ? '#9CA3AF' : '#475569'}
-              tick={{ 
-                fill: isDark ? '#9CA3AF' : '#475569',
-                fontSize: 12
+              stroke={computedStyles.axisStroke}
+              tick={{
+                fill: computedStyles.tickFill,
+                fontSize: computedStyles.tickFontSize // Use computed style
               }}
               tickLine={false}
               axisLine={false}
             />
             <YAxis 
-              stroke={isDark ? '#9CA3AF' : '#475569'}
-              tick={{ 
-                fill: isDark ? '#9CA3AF' : '#475569',
-                fontSize: 12
+              stroke={computedStyles.axisStroke}
+              tick={{
+                fill: computedStyles.tickFill,
+                fontSize: computedStyles.tickFontSize // Use computed style
               }}
               tickFormatter={(value) => formatAmount(value, displayCurrency)}
               domain={[0, yAxisMax]}
@@ -90,28 +152,15 @@ export function ExpenseBreakdown({ data }: Props) {
               tickLine={false}
               width={isBTC ? 120 : 80}
             />
-            <Tooltip
-              content={({ active, payload, label }) => {
-                if (!active || !payload?.[0]) return null;
-                const data = payload[0].payload;
-                
-                return (
-                  <div className="neumorphic-card rounded-lg p-4">
-                    <p className="font-medium mb-2">{label}</p>
-                    <div className="flex justify-between gap-4">
-                      <span className="text-theme-secondary">Amount:</span>
-                      <span className={isBTC ? 'text-[#f7931a]' : 'text-emerald-400'}>
-                        {formatAmount(data.value, displayCurrency)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              }}
+            <Tooltip 
+              content={<CustomTooltip />} 
+              cursor={{ fill: computedStyles.tooltipCursorFill }} // Use computed style
             />
             <Bar 
               dataKey="value" 
-              fill={isBTC ? '#f7931a' : '#10B981'}
-              radius={[4, 4, 0, 0]}
+              fill={isBTC ? computedStyles.btcBarFill : computedStyles.barFill} // Use computed style
+              // radius={computedStyles.barRadius} // Use computed (parsed) radius
+               radius={[4, 4, 0, 0]} // Keep hardcoded for now - parsing CSS units is complex
             />
           </BarChart>
         </ResponsiveContainer>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useDevice } from '../hooks/useDevice';
 import { MobileHeader } from './MobileHeader';
@@ -74,7 +74,7 @@ export default function Layout() {
   }, []);
 
   const totalMonthlyCost = filteredSubscriptions.reduce((sum, sub) => {
-    return sum + sub.monthlyCost;
+    return sum + (sub.monthlyCost || 0);
   }, 0);
 
   const formattedTotalCost = formatAmount(
@@ -124,7 +124,13 @@ export default function Layout() {
         <div className="container mx-auto px-4">
           <div className="flex items-center mb-8">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2 title-gradient">Substimate</h1>
+              <Link 
+                to="/" 
+                className="flex items-center gap-2 transition-all duration-300 ease-out hover:brightness-105"
+              >
+                <img src="/substimate_logo.svg" alt="Substimate Logo" className="w-12 h-12" />
+                <h1 className="text-3xl font-bold mb-2 title-gradient">Substimate</h1>
+              </Link>
               {user && (
                 <p className="text-theme-secondary">
                   Total Monthly Cost: <span className={`font-semibold ${displayCurrency === 'BTC' ? 'text-[#f7931a]' : 'text-emerald-400'}`}>
@@ -149,7 +155,7 @@ export default function Layout() {
                 <>
                   <button
                     onClick={() => setIsModalOpen(true)}
-                    className={`neumorphic-button flex items-center gap-2 px-6 py-3 rounded-xl ${
+                    className={`themed-button flex items-center gap-2 px-6 py-3 rounded-xl ${
                       displayCurrency === 'BTC' ? 'text-[#f7931a]' : 'text-emerald-400'
                     }`}
                   >
@@ -158,7 +164,7 @@ export default function Layout() {
                   </button>
                   <button
                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="neumorphic-button p-3 rounded-xl text-theme-secondary hover:text-theme-primary"
+                    className="themed-button p-3 rounded-xl text-theme-secondary hover:text-theme-primary"
                     title="Toggle Menu"
                   >
                     <Menu size={20} />
@@ -167,7 +173,7 @@ export default function Layout() {
               ) : (
                 <button
                   onClick={() => setIsAuthModalOpen(true)}
-                  className={`neumorphic-button px-6 py-3 rounded-xl ${
+                  className={`themed-button px-6 py-3 rounded-xl ${
                     displayCurrency === 'BTC' ? 'text-[#f7931a]' : 'text-emerald-400'
                   }`}
                 >

@@ -1,0 +1,158 @@
+/* Modern Light */
+:root[data-visual-style="modern"][data-theme="light"] {
+  /* Text Colors (Default Light) */
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+
+  --card-bg: var(--background-primary);
+  --card-hover: var(--background-secondary);
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --card-border: 1px solid var(--border-color);
+  --button-bg: #f1f5f9;
+  --button-shadow: 4px 4px 8px rgba(163, 177, 198, 0.6), -4px -4px 8px #ffffff, inset 1px 1px 1px rgba(163, 177, 198, 0.3), inset -1px -1px 1px #ffffff;
+  --button-border: transparent;
+  --input-bg: var(--background-secondary);
+  --input-shadow: none;
+  --input-border: 1px solid var(--border-color);
+  --icon-bg: var(--background-secondary);
+  --icon-shadow: none;
+  --icon-border: 1px solid var(--border-color);
+  --tooltip-bg: var(--background-primary);
+  --tooltip-text: var(--text-primary);
+  --tooltip-border: 1px solid var(--border-color);
+  --tooltip-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  --backdrop-filter: none;
+
+  /* --- Modern Light Mode Chart Variables --- */
+  --chart-color-1: #0ea5e9; /* Sky Blue */
+  --chart-color-2: #eab308; /* Yellow */
+  --chart-color-3: #8b5cf6; /* Violet */
+  --chart-color-4: #10b981; /* Emerald */
+  --chart-color-5: #ec4899; /* Pink */
+  --chart-color-6: #f43f5e; /* Rose Red */
+  --chart-color-7: #f59e0b; /* Amber */
+  --chart-color-btc: #f7931a;
+  --chart-grid-color: var(--border-color);
+  --chart-axis-color: var(--text-secondary);
+  --chart-text-color: var(--text-secondary);
+  --chart-tooltip-bg: var(--tooltip-bg);
+  --chart-tooltip-text: var(--tooltip-text);
+  --chart-tooltip-border: var(--tooltip-border);
+  --chart-tooltip-shadow: var(--tooltip-shadow);
+  --chart-positive-color: var(--chart-color-4);
+  --chart-negative-color: var(--chart-color-6); /* text highlight color negative */
+  --chart-warning-color: var(--chart-color-2);
+  --chart-highlight-color: var(--highlight-color);
+  --analytics-text-highlight-color: #626c70; /* Text Highlight Color for Analytics */
+  --chart-line-stroke: var(--chart-color-1);
+  --chart-line-dot-stroke: var(--chart-line-stroke);
+  --chart-line-dot-fill: var(--background-primary);
+  --chart-bar-fill: var(--chart-color-1);
+  --chart-area-fill-1: linear-gradient(180deg, hsla(199, 88%, 53%, 0.4), hsla(199, 88%, 53%, 0.05));
+  --chart-area-stroke-1: var(--chart-color-1);
+  --chart-area-fill-2: linear-gradient(180deg, hsla(350, 89%, 60%, 0.4), hsla(350, 89%, 60%, 0.05));
+  --chart-area-stroke-2: var(--chart-color-6);
+  --chart-pie-slice-1: var(--chart-color-1);
+  --chart-pie-slice-2: var(--chart-color-2);
+  --chart-pie-slice-3: var(--chart-color-3);
+  --chart-pie-slice-4: var(--chart-color-4);
+  --chart-pie-slice-5: var(--chart-color-5);
+  --chart-tooltip-cursor-fill: rgba(226, 232, 240, 0.15); /* Light slate alpha */
+  --chart-tick-font-size: 12px;
+  /* New Variables for PieChart */
+  --chart-pie-cell-stroke: var(--background-primary);
+  --chart-pie-cell-stroke-width: 2px;
+  --chart-pie-outer-radius: 120px;
+  --chart-legend-icon-size: 10px;
+}
+
+/* Modern Dark */
+:root[data-visual-style="modern"][data-theme="dark"] {
+  /* Text Colors (Default Dark) */
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-tertiary: #6b7280;
+
+  --card-bg: #1c222c; /* Dark Slate */
+  --card-hover: #252f3d;
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --card-border: 1px solid #334155;
+  --button-bg: #252a33;
+  --button-shadow: 4px 4px 8px rgba(10, 10, 10, 0.6), -4px -4px 8px rgba(60, 60, 60, 0.5), inset 1px 1px 1px rgba(10, 10, 10, 0.3), inset -1px -1px 1px rgba(60, 60, 60, 0.5);
+  --button-border: transparent;
+  --input-bg: #334155;
+  --input-shadow: none;
+  --input-border: 1px solid #475569;
+  --icon-bg: #334155;
+  --icon-shadow: none;
+  --icon-border: 1px solid #475569;
+  --tooltip-bg: #1e293b;
+  --tooltip-text: var(--text-primary);
+  --tooltip-border: 1px solid #334155;
+  --tooltip-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  --backdrop-filter: none;
+
+  /* --- Modern Dark Mode Chart Variables --- */
+  --chart-color-1: #38bdf8; /* Lighter Sky Blue */
+  --chart-color-2: #fde047; /* Lighter Yellow */
+  --chart-color-3: #a78bfa; /* Lighter Violet */
+  --chart-color-4: #34d399; /* Lighter Emerald */
+  --chart-color-5: #f472b6; /* Lighter Pink */
+  --chart-color-6: #fb7185; /* Lighter Rose Red */
+  --chart-color-7: #fbbf24; /* Lighter Amber */
+  --chart-color-btc: #f7931a;
+  --chart-grid-color: #334155;
+  --chart-axis-color: var(--text-secondary);
+  --chart-text-color: var(--text-secondary);
+  --chart-tooltip-bg: var(--tooltip-bg);
+  --chart-tooltip-text: var(--tooltip-text);
+  --chart-tooltip-border: var(--tooltip-border);
+  --chart-tooltip-shadow: var(--tooltip-shadow);
+  --chart-positive-color: var(--chart-color-4);
+  --chart-negative-color: var(--chart-color-6);
+  --chart-warning-color: var(--chart-color-2);
+  --chart-highlight-color: var(--highlight-color);
+  --analytics-text-highlight-color: #d3d3d3; /* Added: Use lighter emerald */
+  --chart-line-stroke: var(--chart-color-1);
+  --chart-line-dot-stroke: var(--chart-line-stroke);
+  --chart-line-dot-fill: var(--card-bg);
+  --chart-bar-fill: var(--chart-color-1);
+  --chart-area-fill-1: linear-gradient(180deg, hsla(199, 93%, 60%, 0.4), hsla(199, 93%, 60%, 0.05));
+  --chart-area-stroke-1: var(--chart-color-1);
+  --chart-area-fill-2: linear-gradient(180deg, hsla(351, 95%, 71%, 0.4), hsla(351, 95%, 71%, 0.05));
+  --chart-area-stroke-2: var(--chart-color-6);
+  --chart-pie-slice-1: var(--chart-color-1);
+  --chart-pie-slice-2: var(--chart-color-2);
+  --chart-pie-slice-3: var(--chart-color-3);
+  --chart-pie-slice-4: var(--chart-color-4);
+  --chart-pie-slice-5: var(--chart-color-5);
+  --chart-tooltip-cursor-fill: rgba(51, 65, 85, 0.15); /* Dark slate alpha */
+  --chart-tick-font-size: 12px;
+  /* New Variables for PieChart */
+  --chart-pie-cell-stroke: var(--background-primary);
+  --chart-pie-cell-stroke-width: 2px;
+  --chart-pie-outer-radius: 120px;
+  --chart-legend-icon-size: 10px;
+}
+
+/* Specific overrides for Modern button theme updates - Placed outside layers */
+html[data-visual-style="modern"] .themed-button {
+  background: var(--button-bg);
+  border: var(--button-border);
+  box-shadow: var(--button-shadow);
+  backdrop-filter: var(--backdrop-filter);
+}
+
+/* Specific overrides for Modern tooltips */
+html[data-visual-style="modern"] .themed-tooltip {
+  background-color: var(--card-bg); /* Use theme's card bg */
+  color: var(--text-primary); /* Use theme var */
+  border: 1px solid var(--border-color); /* Use theme var */
+  box-shadow: var(--shadow-base); /* Use theme var */
+  border-radius: var(--radius-medium, 0.375rem);
+  padding: var(--spacing-3, 0.75rem);
+  backdrop-filter: none;
+}
+
+/* No specific dark/light overrides needed if bg/text/border/shadow vars change correctly */

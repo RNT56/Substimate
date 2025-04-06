@@ -10,6 +10,12 @@ import { FlowTooltip } from './FlowTooltip';
 import type { Props, Node, Link, PriceHistory } from './types';
 import { SATS_PER_BTC } from '../../lib/constants';
 
+// Helper function to get computed style property
+const getCssVariable = (variable: string, fallback: string = '#888') => {
+  if (typeof window === 'undefined') return fallback; // Guard for SSR or testing
+  return getComputedStyle(document.documentElement).getPropertyValue(variable).trim() || fallback;
+};
+
 export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpenses, subscriptions }: Props) {
   const { theme } = useTheme();
   const { displayCurrency, convertAmount, formatAmount } = useCurrency();
@@ -24,6 +30,25 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
   const [priceHistory, setPriceHistory] = useState<Record<string, PriceHistory[]>>({});
   const [activeLink, setActiveLink] = useState<Link | null>(null);
   const [stickyTooltip, setStickyTooltip] = useState(false);
+
+  // Define color mapping using resolved CSS variables
+  const colorMapping = useMemo(() => {
+    const incomeColor = getCssVariable(isBTC ? '--chart-color-btc' : '--chart-color-1', '#10B981');
+    const defaultTextColor = getCssVariable('--chart-text-color', '#333'); // Use a dark fallback for light mode
+    
+    return {
+      income: incomeColor,
+      savings: getCssVariable('--chart-color-2', '#F59E0B'),
+      fixed: getCssVariable('--chart-color-6', '#EF4444'),
+      variable: getCssVariable('--chart-color-7', '#F97316'),
+      subscription: getCssVariable('--chart-color-4', '#8B5CF6'),
+      default: defaultTextColor, // Use resolved default text color
+      // Explicitly set text color based on dark mode
+      text: isDark ? '#FFFFFF' : defaultTextColor, 
+      tooltipBg: getCssVariable('--chart-tooltip-bg', isDark ? '#1F2937' : '#F9FAFB') // Dark/Light fallback for tooltip
+    };
+  // Rerun when theme or currency potentially affecting BTC color changes
+  }, [theme, isDark, isBTC]); // Add isDark dependency
 
   useEffect(() => {
     const fetchPriceHistory = async () => {
@@ -384,28 +409,28 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
   }, [flowData]);
 
   const getNodeColor = (node: Node) => {
-    if (node.category === 'income') return isBTC ? '#f7931a' : '#10B981';
-    if (node.category === 'savings') return '#F59E0B';
+    if (node.category === 'income') return colorMapping.income;
+    if (node.category === 'savings') return colorMapping.savings;
     
-    if (node.name.startsWith('Fixed:')) return '#EF4444';
-    if (node.name.startsWith('Variable:')) return '#F97316';
-    if (node.name.startsWith('Sub:')) return '#8B5CF6';
+    if (node.name.startsWith('Fixed:')) return colorMapping.fixed;
+    if (node.name.startsWith('Variable:')) return colorMapping.variable;
+    if (node.name.startsWith('Sub:')) return colorMapping.subscription;
     
-    return '#64748B';
+    return colorMapping.default;
   };
 
   const getLinkColor = (link: Link) => {
     switch (link.category) {
       case 'fixed':
-        return '#EF444480';
+        return colorMapping.fixed;
       case 'variable':
-        return '#F9731680';
+        return colorMapping.variable;
       case 'subscription':
-        return '#8B5CF680';
+        return colorMapping.subscription;
       case 'savings':
-        return '#F59E0B80';
+        return colorMapping.savings;
       default:
-        return '#64748B80';
+        return colorMapping.default;
     }
   };
 
@@ -422,7 +447,7 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
   };
 
   return (
-    <div className="neumorphic-card rounded-xl p-6">
+    <div className="themed-card rounded-xl p-6">
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-xl font-bold text-theme-primary">Spending Flow</h2>
         <TimeframeSelector 
@@ -470,23 +495,24 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
               ))}
 
               {sankeyData.nodes?.map((node, i) => (
-                <g 
-                  key={i} 
-                  transform={`translate(${node.x0},${node.y0})`}
+                <g
+                  key={i}
+                  transform={`translate(${node.x0 || 0},${node.y0 || 0})`}
                 >
                   <rect
-                    height={Math.max(1, node.y1 as number - node.y0 as number)}
-                    width={node.x1 as number - node.x0 as number}
+                    height={Math.max(1, (node.y1 || 0) as number - (node.y0 || 0) as number)}
+                    width={(node.x1 || 0) as number - (node.x0 || 0) as number}
                     fill={getNodeColor(node)}
                     opacity={0.8}
                   />
                   <text
-                    x={node.category === 'income' ? 6 : -6}
-                    y={(node.y1 as number - node.y0 as number) / 2}
+                    x={(node.x0 || 0) < 600 ? 6 : -6}
+                    y={((node.y1 || 0) as number - (node.y0 || 0) as number) / 2}
                     dy="0.35em"
-                    textAnchor={node.category === 'income' ? 'start' : 'end'}
-                    fill={isDark ? '#fff' : '#000'}
+                    textAnchor={(node.x0 || 0) < 600 ? 'start' : 'end'}
+                    fill={colorMapping.text}
                     fontSize={12}
+                    fontWeight="medium"
                   >
                     {node.name.replace('Fixed: ', '').replace('Variable: ', '').replace('Sub: ', '')}
                     {' '}
@@ -498,10 +524,10 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
 
             <g transform="translate(40,560)">
               {[
-                { name: 'Fixed Expenses', color: '#EF4444' },
-                { name: 'Variable Expenses', color: '#F97316' },
-                { name: 'Subscriptions', color: '#8B5CF6' },
-                { name: 'Savings', color: '#F59E0B' }
+                { name: 'Fixed Expenses', color: colorMapping.fixed },
+                { name: 'Variable Expenses', color: colorMapping.variable },
+                { name: 'Subscriptions', color: colorMapping.subscription },
+                { name: 'Savings', color: colorMapping.savings }
               ].map((item, i) => (
                 <g key={item.name} transform={`translate(${i * 250},0)`}>
                   <rect
@@ -514,7 +540,7 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
                     x={24}
                     y={12}
                     fontSize={12}
-                    fill={isDark ? '#fff' : '#000'}
+                    fill={colorMapping.text}
                   >
                     {item.name}
                   </text>

@@ -8,7 +8,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="neumorphic-button p-3 rounded-xl text-gray-400 hover:text-gray-300"
+      className="themed-button p-3 rounded-xl text-gray-400 hover:text-gray-300"
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
     >
       {theme === 'dark' ? <Sun size={24} /> : <Moon size={24} />}

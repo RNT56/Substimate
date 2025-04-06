@@ -24,11 +24,10 @@ import { ErrorBoundary } from './ErrorBoundary';
 interface Props {
   subscriptions: Subscription[];
   onUpdate: (subscription: Subscription) => void;
-  onDelete: (id: string) => void;
   onReorder: (subscriptions: Subscription[]) => void;
 }
 
-export function SubscriptionList({ subscriptions, onUpdate, onDelete, onReorder }: Props) {
+export function SubscriptionList({ subscriptions, onUpdate, onReorder }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [localSubscriptions, setLocalSubscriptions] = useState(subscriptions);
@@ -97,7 +96,6 @@ export function SubscriptionList({ subscriptions, onUpdate, onDelete, onReorder 
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
         subscriptions={subscriptions}
-        subscriptions={subscriptions}
       />
       
       <DndContext
@@ -120,7 +118,6 @@ export function SubscriptionList({ subscriptions, onUpdate, onDelete, onReorder 
                   <SortableSubscriptionCard
                     subscription={subscription}
                     onUpdate={onUpdate}
-                    onDelete={onDelete}
                   />
                 </ErrorBoundary>
               );

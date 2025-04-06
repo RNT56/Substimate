@@ -18,7 +18,7 @@ export function CurrencySelector() {
         <button
           key={value}
           onClick={() => setDisplayCurrency(value)}
-          className={`neumorphic-button px-3 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+          className={`themed-button px-3 py-2 rounded-lg flex items-center gap-2 transition-colors ${
             displayCurrency === value
               ? value === 'BTC' ? 'text-[#f7931a]' : 'text-emerald-400'
               : 'text-theme-secondary hover:text-theme-primary'

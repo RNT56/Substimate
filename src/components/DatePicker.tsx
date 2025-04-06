@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, ChevronDown } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useDevice } from '../hooks/useDevice';
 
 interface DatePickerProps {
   value: string;
@@ -22,6 +23,7 @@ export function DatePicker({
   className = ''
 }: DatePickerProps) {
   const { theme } = useTheme();
+  const { isMobile } = useDevice();
   const [isOpen, setIsOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(() => {
     if (value) {
@@ -38,6 +40,9 @@ export function DatePicker({
   const datePickerRef = useRef<HTMLDivElement>(null);
   const monthScrollRef = useRef<HTMLDivElement>(null);
   const yearScrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number } | null>(null);
   
   // Format date for display
   const formattedDate = new Date(value).toLocaleDateString(undefined, {
@@ -80,6 +85,20 @@ export function DatePicker({
       }
     }
   }, [showYearPicker, viewedYear]);
+  
+  // Calculate popover position when opening on mobile
+  useEffect(() => {
+    if (isOpen && isMobile && inputRef.current) {
+      const inputRect = inputRef.current.getBoundingClientRect();
+      // Position below the input, consider potential screen bottom collision
+      const top = inputRect.bottom + 8; // 8px gap
+      const left = inputRect.left;
+      // TODO: Add logic to prevent going off-screen bottom/right if necessary
+      setPopoverPosition({ top, left });
+    } else {
+      setPopoverPosition(null); // Reset when closing or not mobile
+    }
+  }, [isOpen, isMobile]);
   
   // Generate month and year ranges
   const months = [
@@ -181,11 +200,12 @@ export function DatePicker({
     <div className="relative" ref={datePickerRef}>
       <div className="relative">
         <input
+          ref={inputRef}
           type="text"
           readOnly
           value={formattedDate}
           onClick={() => !disabled && setIsOpen(!isOpen)}
-          className={`w-full neumorphic-input rounded-lg pl-10 pr-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`w-full themed-input rounded-lg pl-10 pr-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           required={required}
           disabled={disabled}
         />
@@ -194,7 +214,13 @@ export function DatePicker({
       
       {isOpen && !disabled && (
         <div 
-          className={`absolute z-50 mt-2 w-[320px] right-0 neumorphic-card rounded-lg overflow-hidden ${isDarkMode ? 'bg-[#2d2d2d]' : 'bg-white'} shadow-lg`}
+          className={`z-50 mt-2 w-[320px] neumorphic-card rounded-lg overflow-hidden ${isDarkMode ? 'bg-[#2d2d2d]' : 'bg-white'} shadow-lg`}
+          style={{
+            position: isMobile && popoverPosition ? 'fixed' : 'absolute',
+            top: isMobile && popoverPosition ? `${popoverPosition.top}px` : undefined,
+            left: isMobile && popoverPosition ? `${popoverPosition.left}px` : undefined,
+            right: !isMobile ? 0 : undefined,
+          }}
           onClick={handleOverlayClick}
         >
           <div className="p-4">
