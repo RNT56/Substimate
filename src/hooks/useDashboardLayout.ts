@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import type { DashboardLayout } from '../types';
 
 const DEFAULT_LAYOUT = ['dashboard-card-0', 'dashboard-card-1', 'dashboard-card-2', 'dashboard-card-3'];
 
@@ -10,17 +9,29 @@ export function useDashboardLayout() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (!user) {
-      setLayout(DEFAULT_LAYOUT);
-      setLoading(false);
-      return;
-    }
+  const createDefaultLayout = useCallback(async () => {
+    if (!user) return;
 
-    fetchLayout();
+    try {
+      const { data, error } = await supabase
+        .from('dashboard_layouts')
+        .insert({
+          user_id: user.id,
+          layout: DEFAULT_LAYOUT
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      setLayout(data.layout);
+    } catch (error) {
+      console.error('Error creating default layout:', error);
+      // Fallback to default layout on error
+      setLayout(DEFAULT_LAYOUT);
+    }
   }, [user]);
 
-  const fetchLayout = async () => {
+  const fetchLayout = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -47,29 +58,17 @@ export function useDashboardLayout() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, createDefaultLayout]);
 
-  const createDefaultLayout = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('dashboard_layouts')
-        .insert({
-          user_id: user.id,
-          layout: DEFAULT_LAYOUT
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      setLayout(data.layout);
-    } catch (error) {
-      console.error('Error creating default layout:', error);
-      // Fallback to default layout on error
+  useEffect(() => {
+    if (!user) {
       setLayout(DEFAULT_LAYOUT);
+      setLoading(false);
+      return;
     }
-  };
+
+    void fetchLayout();
+  }, [user, fetchLayout]);
 
   const saveLayout = async (newLayout: string[]) => {
     if (!user) return;

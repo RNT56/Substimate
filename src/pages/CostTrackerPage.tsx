@@ -7,9 +7,11 @@ import { CategoryDistribution } from '../components/cost-tracker/CategoryDistrib
 import { ExpenseBreakdown } from '../components/cost-tracker/ExpenseBreakdown';
 import { SpendingFlowChart } from '../components/cost-tracker/SpendingFlowChart';
 import { format, parseISO, subMonths, eachMonthOfInterval, startOfMonth, endOfMonth } from 'date-fns';
+import { convertSubscriptionMonthlyAmount } from '../lib/subscriptionCosts';
 
 export function CostTrackerPage() {
-  const { displayCurrency, convertAmount } = useCurrency();
+  const { displayCurrency, convertAmount, formatAmount } = useCurrency();
+  const isBTC = displayCurrency === 'BTC';
   const { subscriptions } = useSubscriptions();
   const { 
     fixedExpenses, 
@@ -51,20 +53,19 @@ export function CostTrackerPage() {
           return startDate <= monthEnd;
         })
         .reduce((sum, sub) => {
-          const monthlyCost = sub.billingPeriod === 'yearly' 
-            ? (sub.monthlyCost || 0) / 12 
-            : (sub.monthlyCost || 0);
-          return sum + monthlyCost;
+          return sum + convertSubscriptionMonthlyAmount(sub, displayCurrency, convertAmount);
         }, 0);
 
-      const totalExpenses = monthlyFixedExpenses + monthlyVariableExpenses + monthlySubscriptionCosts;
+      const convertedFixedExpenses = convertAmount(monthlyFixedExpenses, 'EUR', displayCurrency);
+      const convertedVariableExpenses = convertAmount(monthlyVariableExpenses, 'EUR', displayCurrency);
+      const totalExpenses = convertedFixedExpenses + convertedVariableExpenses + monthlySubscriptionCosts;
 
       return {
         month: format(month, 'MMM yyyy'),
-        fixedExpenses: convertAmount(monthlyFixedExpenses, 'EUR', displayCurrency),
-        variableExpenses: convertAmount(monthlyVariableExpenses, 'EUR', displayCurrency),
-        subscriptionCosts: convertAmount(monthlySubscriptionCosts, 'EUR', displayCurrency),
-        totalExpenses: convertAmount(totalExpenses, 'EUR', displayCurrency)
+        fixedExpenses: convertedFixedExpenses,
+        variableExpenses: convertedVariableExpenses,
+        subscriptionCosts: monthlySubscriptionCosts,
+        totalExpenses
       };
     });
   }, [fixedExpenses, variableExpenses, subscriptions, convertAmount, displayCurrency]);
@@ -79,8 +80,7 @@ export function CostTrackerPage() {
           count: 0
         };
       }
-      const monthlyCost = sub.billingPeriod === 'yearly' ? (sub.monthlyCost || 0) / 12 : (sub.monthlyCost || 0);
-      acc[sub.category].value += convertAmount(monthlyCost, 'EUR', displayCurrency);
+      acc[sub.category].value += convertSubscriptionMonthlyAmount(sub, displayCurrency, convertAmount);
       acc[sub.category].count += 1;
       return acc;
     }, {} as Record<string, { name: string; value: number; count: number }>);
@@ -108,16 +108,24 @@ export function CostTrackerPage() {
     },
     {
       name: 'Subscriptions',
-      value: convertAmount(
-        subscriptions.reduce((sum, sub) => {
-          const monthlyCost = sub.billingPeriod === 'yearly' ? (sub.monthlyCost || 0) / 12 : (sub.monthlyCost || 0);
-          return sum + monthlyCost;
-        }, 0),
-        'EUR',
-        displayCurrency
-      )
+      value: subscriptions.reduce((sum, sub) => {
+        return sum + convertSubscriptionMonthlyAmount(sub, displayCurrency, convertAmount);
+      }, 0)
     }
   ], [fixedExpenses, variableExpenses, subscriptions, convertAmount, displayCurrency]);
+
+  const reviewQueue = React.useMemo(() => {
+    return subscriptions
+      .filter(sub => sub.usageState === 'unused' || sub.usageState === 'not much')
+      .map(sub => ({
+        id: sub.id,
+        name: sub.name,
+        usageState: sub.usageState || 'unused',
+        monthlyCost: convertSubscriptionMonthlyAmount(sub, displayCurrency, convertAmount)
+      }))
+      .sort((a, b) => b.monthlyCost - a.monthlyCost)
+      .slice(0, 5);
+  }, [subscriptions, displayCurrency, convertAmount]);
 
   if (loading) {
     return (
@@ -139,13 +147,28 @@ export function CostTrackerPage() {
         <CategoryDistribution data={categoryData} />
         <ExpenseBreakdown data={expenseBreakdown} />
         
-        {/* Cost Predictions Placeholder */}
         <div className="themed-card rounded-xl p-6">
-          <h2 className="text-xl font-bold mb-6 text-theme-primary">Cost Predictions</h2>
-          <div className="h-[400px] flex items-center justify-center">
-            <p className="text-theme-secondary">
-              Coming soon: AI-powered cost predictions and optimization suggestions
-            </p>
+          <h2 className="text-xl font-bold mb-6 text-theme-primary">Review Queue</h2>
+          <div className="min-h-[400px]">
+            {reviewQueue.length > 0 ? (
+              <div className="space-y-3">
+                {reviewQueue.map(item => (
+                  <div key={item.id} className="dashboard-card p-4 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="font-medium text-theme-primary">{item.name}</p>
+                      <p className="text-sm text-theme-secondary capitalize">{item.usageState}</p>
+                    </div>
+                    <p className={isBTC ? 'text-[#f7931a]' : 'text-emerald-400'}>
+                      {formatAmount(item.monthlyCost, displayCurrency)}/mo
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="h-[320px] flex items-center justify-center text-theme-secondary text-center">
+                No unused or low-usage subscriptions are currently marked for review.
+              </div>
+            )}
           </div>
         </div>
       </div>

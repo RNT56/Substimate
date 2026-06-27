@@ -29,7 +29,7 @@ ALTER TABLE subscriptions DROP CONSTRAINT IF EXISTS category_not_empty;
 
 -- Add new constraint to ensure category is not empty
 ALTER TABLE subscriptions
-ADD CONSTRAINT category_not_empty 
+ADD CONSTRAINT category_not_empty
 CHECK (category IS NOT NULL AND category != '');
 
 -- Create function to get unique categories for a user
@@ -37,9 +37,10 @@ CREATE OR REPLACE FUNCTION get_user_categories(user_id uuid)
 RETURNS TABLE (category text)
 LANGUAGE sql
 SECURITY DEFINER
+SET search_path = public
 AS $$
-  SELECT DISTINCT category 
-  FROM subscriptions 
-  WHERE user_id = $1 
-  ORDER BY category;
+  SELECT DISTINCT subscriptions.category
+  FROM subscriptions
+  WHERE subscriptions.user_id = auth.uid()
+  ORDER BY subscriptions.category;
 $$;

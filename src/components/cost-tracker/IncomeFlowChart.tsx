@@ -70,7 +70,7 @@ function LinkTooltip({ link, mouseX, mouseY, onClose }: LinkTooltipProps) {
   const totalAmount = link.value;
 
   return (
-    <div 
+    <div
       className={`
         fixed z-50 w-80
         neumorphic-card rounded-lg p-4 backdrop-blur-md border
@@ -87,7 +87,7 @@ function LinkTooltip({ link, mouseX, mouseY, onClose }: LinkTooltipProps) {
         <h3 className="font-medium text-theme-primary">
           {targetNode.name.replace('Fixed: ', '').replace('Variable: ', '').replace('Sub: ', '')}
         </h3>
-        <button 
+        <button
           onClick={onClose}
           className="text-theme-secondary hover:text-theme-primary transition-colors"
         >
@@ -108,8 +108,8 @@ function LinkTooltip({ link, mouseX, mouseY, onClose }: LinkTooltipProps) {
             <div className="h-px bg-gray-700/50" />
             <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
               {services.map((service, i) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className="text-sm p-2 rounded-lg hover:bg-gray-800/20 transition-colors"
                 >
                   <div className="flex justify-between mb-1">
@@ -138,7 +138,7 @@ function LinkTooltip({ link, mouseX, mouseY, onClose }: LinkTooltipProps) {
 
 export function IncomeFlowChart({ incomeSources, fixedExpenses, variableExpenses, subscriptions }: Props) {
   const { theme } = useTheme();
-  const { displayCurrency, convertAmount, formatAmount } = useCurrency();
+  const { displayCurrency, formatAmount } = useCurrency();
   const isDark = theme === 'dark';
   const isBTC = displayCurrency === 'BTC';
 
@@ -240,7 +240,7 @@ export function IncomeFlowChart({ incomeSources, fixedExpenses, variableExpenses
     ].reduce((sum, service) => sum + service.amount, 0);
 
     const savings = Math.max(0, totalIncome - totalExpenses);
-    
+
     nodes.push(
       ...fixedCategoryNodes,
       ...variableCategoryNodes,
@@ -315,11 +315,11 @@ export function IncomeFlowChart({ incomeSources, fixedExpenses, variableExpenses
   const getNodeColor = (node: Node) => {
     if (node.category === 'income') return isBTC ? '#f7931a' : '#10B981';
     if (node.category === 'savings') return '#F59E0B';
-    
+
     if (node.name.startsWith('Fixed:')) return '#EF4444';
     if (node.name.startsWith('Variable:')) return '#F97316';
     if (node.name.startsWith('Sub:')) return '#8B5CF6';
-    
+
     return '#64748B';
   };
 
@@ -356,8 +356,8 @@ export function IncomeFlowChart({ incomeSources, fixedExpenses, variableExpenses
             <g transform="translate(40,20)">
               {/* Links */}
               {sankeyData.links?.map((link, i) => (
-                <g 
-                  key={i} 
+                <g
+                  key={i}
                   fill="none"
                   onMouseEnter={(e) => handleLinkMouseEnter(e, link)}
                   onMouseMove={handleLinkMouseMove}
@@ -382,31 +382,39 @@ export function IncomeFlowChart({ incomeSources, fixedExpenses, variableExpenses
               ))}
 
               {/* Nodes */}
-              {sankeyData.nodes?.map((node, i) => (
-                <g 
-                  key={i} 
-                  transform={`translate(${node.x0},${node.y0})`}
-                >
-                  <rect
-                    height={Math.max(1, node.y1 as number - node.y0 as number)}
-                    width={node.x1 as number - node.x0 as number}
-                    fill={getNodeColor(node)}
-                    opacity={0.8}
-                  />
-                  <text
-                    x={node.category === 'income' ? 6 : -6}
-                    y={(node.y1 as number - node.y0 as number) / 2}
-                    dy="0.35em"
-                    textAnchor={node.category === 'income' ? 'start' : 'end'}
-                    fill={isDark ? '#fff' : '#000'}
-                    fontSize={12}
+              {sankeyData.nodes?.map((node, i) => {
+                const x0 = node.x0 ?? 0;
+                const x1 = node.x1 ?? x0;
+                const y0 = node.y0 ?? 0;
+                const y1 = node.y1 ?? y0;
+                const nodeHeight = Math.max(1, y1 - y0);
+
+                return (
+                  <g
+                    key={i}
+                    transform={`translate(${x0},${y0})`}
                   >
-                    {node.name.replace('Fixed: ', '').replace('Variable: ', '').replace('Sub: ', '')}
-                    {' '}
-                    ({formatAmount(node.value as number, displayCurrency)})
-                  </text>
-                </g>
-              ))}
+                    <rect
+                      height={nodeHeight}
+                      width={x1 - x0}
+                      fill={getNodeColor(node)}
+                      opacity={0.8}
+                    />
+                    <text
+                      x={node.category === 'income' ? 6 : -6}
+                      y={nodeHeight / 2}
+                      dy="0.35em"
+                      textAnchor={node.category === 'income' ? 'start' : 'end'}
+                      fill={isDark ? '#fff' : '#000'}
+                      fontSize={12}
+                    >
+                      {node.name.replace('Fixed: ', '').replace('Variable: ', '').replace('Sub: ', '')}
+                      {' '}
+                      ({formatAmount(node.value as number, displayCurrency)})
+                    </text>
+                  </g>
+                );
+              })}
             </g>
 
             {/* Legend */}

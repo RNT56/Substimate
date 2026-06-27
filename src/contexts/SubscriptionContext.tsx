@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import type { Subscription, PriceChangeOptions } from '../types';
+import type { Subscription } from '../types';
 import { useAuth } from './AuthContext';
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 
@@ -8,7 +8,7 @@ interface SubscriptionContextType {
   subscriptions: Subscription[];
   loading: boolean;
   addSubscription: (subscription: Omit<Subscription, 'id'>) => Promise<void>;
-  updateSubscription: (subscription: Subscription, priceChangeOptions?: PriceChangeOptions) => Promise<void>;
+  updateSubscription: (subscription: Subscription) => Promise<void>;
   triggerDeleteConfirmation: (id: string) => void;
   confirmDeleteSubscription: (keepHistory: boolean) => Promise<void>;
   toggleFavorite: (subscriptionId: string) => Promise<void>;
@@ -28,46 +28,47 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
   const [subscriptionToDelete, setSubscriptionToDelete] = useState<Subscription | null>(null);
 
-  useEffect(() => {
-    if (!user) {
-      setSubscriptions([]);
+  // Helper function to transform database row to Subscription type
+  const transformSubscription = useCallback((data: any): Subscription => ({
+    id: data.id,
+    name: data.name,
+    url: data.url,
+    icon: data.icon,
+    monthlyCost: parseFloat(data.monthly_cost) || 0,
+    amount: parseFloat(data.monthly_cost) || 0,
+    currency: data.currency || 'EUR',
+    billingPeriod: data.billing_period || 'monthly',
+    paymentMethod: data.payment_method || 'credit_card',
+    category: data.category || 'Other',
+    usageState: data.usage_state || 'active',
+    startDate: data.start_date || new Date().toISOString().split('T')[0],
+    isFavorite: data.favorite || false,
+    favorite: data.favorite || false,
+    autoRenew: data.auto_renew || false,
+    userId: data.user_id || user?.id || ''
+  }), [user?.id]);
+
+  const fetchSubscriptions = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { data: subsData = [], error: subsError } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false });
+
+      if (subsError) throw subsError;
+
+      setSubscriptions(subsData?.map(item => transformSubscription(item)) || []);
+    } catch (error) {
+      console.error('Error fetching subscriptions:', error);
+    } finally {
       setLoading(false);
-      return;
     }
+  }, [user, transformSubscription]);
 
-    fetchSubscriptions();
-    
-    // Create a single channel for all subscription-related changes
-    const channel = supabase
-      .channel('subscription-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'subscriptions',
-          filter: `user_id=eq.${user?.id}`
-        },
-        handleSubscriptionChange
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'subscription_price_history',
-          filter: `user_id=eq.${user?.id}`
-        },
-        handlePriceHistoryChange
-      )
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [user]);
-
-  const handlePriceHistoryChange = (payload: any) => {
+  const handlePriceHistoryChange = useCallback((payload: any) => {
     try {
       // Skip if this is our own optimistic update
       if (optimisticUpdatesRef.current.has(payload.new?.subscription_id)) {
@@ -75,13 +76,13 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       }
 
       // Refresh the subscription data to get latest price
-      fetchSubscriptions();
+      void fetchSubscriptions();
     } catch (error) {
       console.error('Error handling price history change:', error);
     }
-  };
+  }, [fetchSubscriptions]);
 
-  const handleSubscriptionChange = (payload: any) => {
+  const handleSubscriptionChange = useCallback((payload: any) => {
     try {
       // Skip if this is our own optimistic update
       if (optimisticUpdatesRef.current.has(payload.new?.id || payload.old?.id)) {
@@ -92,7 +93,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       switch (payload.eventType) {
         case 'INSERT':
           const newSub = transformSubscription(payload.new);
-          setSubscriptions(prev => [newSub, ...prev]);
+          setSubscriptions(prev => (
+            prev.some(sub => sub.id === newSub.id) ? prev : [newSub, ...prev]
+          ));
           break;
 
         case 'UPDATE':
@@ -116,51 +119,50 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       console.error('Error handling subscription change:', error);
       // Only refresh data if not an optimistic update
       if (!optimisticUpdatesRef.current.has(payload.new?.id || payload.old?.id)) {
-        fetchSubscriptions();
+        void fetchSubscriptions();
       }
     }
-  };
+  }, [fetchSubscriptions, transformSubscription]);
 
-  // Helper function to transform database row to Subscription type
-  const transformSubscription = (data: any): Subscription => ({
-    id: data.id,
-    name: data.name,
-    url: data.url,
-    icon: data.icon,
-    monthlyCost: parseFloat(data.monthly_cost) || 0,
-    amount: parseFloat(data.monthly_cost) || 0,
-    currency: data.currency || 'EUR',
-    billingPeriod: data.billing_period || 'monthly',
-    paymentMethod: data.payment_method || 'credit_card',
-    category: data.category || 'Other',
-    usageState: data.usage_state || 'active',
-    startDate: data.start_date || new Date().toISOString().split('T')[0],
-    isFavorite: data.favorite || false,
-    favorite: data.favorite || false,
-    autoRenew: data.auto_renew || false,
-    userId: data.user_id || user?.id || ''
-  });
-
-  const fetchSubscriptions = async () => {
-    try {
-      const { data: subsData = [], error: subsError } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (subsError) throw subsError;
-
-      setSubscriptions(subsData?.map(item => transformSubscription(item)) || []);
-    } catch (error) {
-      console.error('Error fetching subscriptions:', error);
-    } finally {
+  useEffect(() => {
+    if (!user) {
+      setSubscriptions([]);
       setLoading(false);
+      return;
     }
-  };
 
-  // Basic update function used by specialized functions
-  // @ts-ignore - Used internally but not exported directly
+    void fetchSubscriptions();
+
+    // Create a single channel for all subscription-related changes
+    const channel = supabase
+      .channel('subscription-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'subscriptions',
+          filter: `user_id=eq.${user.id}`
+        },
+        handleSubscriptionChange
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'subscription_price_history',
+          filter: `user_id=eq.${user.id}`
+        },
+        handlePriceHistoryChange
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [user, fetchSubscriptions, handleSubscriptionChange, handlePriceHistoryChange]);
+
   const updateSubscription = async (subscription: Subscription) => {
     // Store previous state for rollback
     const previousSubscriptions = [...subscriptions];
@@ -186,13 +188,14 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
           category: subscription.category,
           usage_state: subscription.usageState,
           start_date: subscription.startDate,
-          favorite: subscription.isFavorite
+          favorite: subscription.isFavorite,
+          currency: subscription.currency || 'EUR'
         })
         .eq('id', subscription.id)
-        .eq('user_id', user?.id);
+        .eq('user_id', user!.id);
 
       if (error) throw error;
-      
+
       // Remove from optimistic updates only after successful update
       optimisticUpdatesRef.current.delete(subscription.id);
     } catch (error) {
@@ -209,7 +212,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     try {
       // Ensure new subscriptions start with favorite = false
       const subscriptionData = {
-        user_id: user?.id,
+        user_id: user!.id,
         name: subscription.name,
         url: subscription.url || '',
         icon: subscription.icon || '',
@@ -231,19 +234,6 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         .single();
 
       if (subscriptionError) throw subscriptionError;
-
-      // Add initial price history record
-      const { error: priceHistoryError } = await supabase
-        .from('subscription_price_history')
-        .insert([{
-          subscription_id: data.id,
-          user_id: user?.id,
-          monthly_cost: subscription.monthlyCost || subscription.amount || 0,
-          effective_from: subscription.startDate || new Date().toISOString().split('T')[0],
-          is_correction: false
-        }]);
-
-      if (priceHistoryError) throw priceHistoryError;
 
       // Update local state immediately
       const newSubscription: Subscription = transformSubscription(data);
@@ -289,9 +279,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
     // Apply optimistic update
     setSubscriptions(prev => prev.filter(sub => sub.id !== id));
-    
+
     // Close the modal immediately
-    closeConfirmDeleteModal(); 
+    closeConfirmDeleteModal();
 
     try {
       // Delete price history if user doesn't want to keep it
@@ -303,13 +293,13 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
             .eq('subscription_id', id)
             .eq('user_id', user.id); // Use user.id directly
         } catch (historyError) {
-          console.log('Error deleting price history:', historyError);
+          console.warn('Error deleting price history:', historyError);
           // Continue with subscription deletion even if price history deletion fails
         }
       }
 
       // Now delete the subscription itself - this uses a direct SQL query to avoid trigger issues
-      const { error } = await supabase.rpc('delete_subscription_directly', { 
+      const { error } = await supabase.rpc('delete_subscription_directly', {
         sub_id: id
       });
 
@@ -320,7 +310,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         optimisticUpdatesRef.current.delete(id);
         throw error; // Re-throw error to be caught by caller if needed
       }
-      
+
       // Remove from optimistic updates after successful deletion
       optimisticUpdatesRef.current.delete(id);
 
@@ -333,85 +323,12 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
        console.error('Error deleting subscription:', error);
        closeConfirmDeleteModal(); // Ensure modal is closed on error
        throw error; // Re-throw error
-    } 
-  };
-
-  const updateSubscriptionWithPriceHistory = async (
-    subscription: Subscription, 
-    priceChangeOptions?: PriceChangeOptions
-  ) => {
-    // Store previous state for rollback
-    const previousSubscriptions = [...subscriptions];
-    const previousSubscription = previousSubscriptions.find(s => s.id === subscription.id);
-
-    if (!previousSubscription) {
-      throw new Error('Subscription not found');
-    }
-
-    // Add to optimistic updates set
-    optimisticUpdatesRef.current.add(subscription.id);
-
-    // Apply optimistic update immediately
-    setSubscriptions(prev =>
-      prev.map(sub => sub.id === subscription.id ? subscription : sub)
-    );
-
-    try {
-      // Only add price history if price changed
-      if (previousSubscription.monthlyCost !== subscription.monthlyCost) {
-        const effectiveDate = priceChangeOptions?.applyToHistory 
-          ? subscription.startDate 
-          : priceChangeOptions?.effectiveDate || new Date().toISOString();
-
-        // Insert price history record
-        const { error: priceHistoryError } = await supabase
-          .from('subscription_price_history')
-          .insert({
-            subscription_id: subscription.id,
-            user_id: user?.id,
-            monthly_cost: subscription.monthlyCost,
-            effective_from: effectiveDate,
-            is_correction: priceChangeOptions?.applyToHistory || false
-          });
-
-        if (priceHistoryError) throw priceHistoryError;
-      }
-
-      // Update subscription
-      const { error } = await supabase
-        .from('subscriptions')
-        .update({
-          name: subscription.name,
-          url: subscription.url,
-          icon: subscription.icon,
-          monthly_cost: subscription.monthlyCost,
-          billing_period: subscription.billingPeriod,
-          payment_method: subscription.paymentMethod,
-          category: subscription.category,
-          usage_state: subscription.usageState,
-          start_date: subscription.startDate,
-          favorite: subscription.isFavorite
-        })
-        .eq('id', subscription.id)
-        .eq('user_id', user?.id);
-
-      if (error) throw error;
-      
-      // Remove from optimistic updates only after successful update
-      optimisticUpdatesRef.current.delete(subscription.id);
-    } catch (error) {
-      // Remove from optimistic updates set
-      optimisticUpdatesRef.current.delete(subscription.id);
-      // Revert to previous state on error
-      setSubscriptions(previousSubscriptions);
-      console.error('Error updating subscription:', error);
-      throw error;
     }
   };
 
   const reorderSubscriptions = async (reorderedSubscriptions: Subscription[]) => {
     const previousOrder = [...subscriptions];
-    
+
     // Add to optimistic updates set
     reorderedSubscriptions.forEach(sub => {
       optimisticUpdatesRef.current.add(sub.id);
@@ -459,20 +376,20 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     // Find subscription
     const subscription = subscriptions.find(s => s.id === subscriptionId);
     if (!subscription) return;
-    
+
     // Store previous state
     const previousSubscriptions = [...subscriptions];
-    
+
     // Determine current favorite status (check both properties)
     const isFavorite = subscription.isFavorite || subscription.favorite || false;
-    
+
     // Track optimistic update
     optimisticUpdatesRef.current.add(subscriptionId);
-    
+
     // Apply optimistic update immediately
-    setSubscriptions(prev => 
-      prev.map(sub => sub.id === subscriptionId 
-        ? {...sub, isFavorite: !isFavorite, favorite: !isFavorite} 
+    setSubscriptions(prev =>
+      prev.map(sub => sub.id === subscriptionId
+        ? {...sub, isFavorite: !isFavorite, favorite: !isFavorite}
         : sub
       )
     );
@@ -483,10 +400,10 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         .from('subscriptions')
         .update({ favorite: !isFavorite })
         .eq('id', subscriptionId)
-        .eq('user_id', user?.id);
+        .eq('user_id', user!.id);
 
       if (error) throw error;
-      
+
       // Remove from tracked updates on success
       optimisticUpdatesRef.current.delete(subscriptionId);
     } catch (error) {
@@ -503,7 +420,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       subscriptions,
       loading,
       addSubscription,
-      updateSubscription: updateSubscriptionWithPriceHistory,
+      updateSubscription,
       triggerDeleteConfirmation,
       confirmDeleteSubscription,
       toggleFavorite,

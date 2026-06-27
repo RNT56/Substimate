@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useDevice } from '../hooks/useDevice';
@@ -13,6 +13,7 @@ import { useCurrency } from '../contexts/CurrencyContext';
 import { AddSubscriptionModal } from './AddSubscriptionModal';
 import { AuthModal } from './AuthModal';
 import { useSubscriptions } from '../contexts/SubscriptionContext';
+import { convertSubscriptionMonthlyAmount } from '../lib/subscriptionCosts';
 
 export default function Layout() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -74,17 +75,15 @@ export default function Layout() {
   }, []);
 
   const totalMonthlyCost = filteredSubscriptions.reduce((sum, sub) => {
-    return sum + (sub.monthlyCost || 0);
+    return sum + convertSubscriptionMonthlyAmount(sub, displayCurrency, convertAmount);
   }, 0);
 
-  const formattedTotalCost = formatAmount(
-    convertAmount(totalMonthlyCost, 'EUR', displayCurrency),
-    displayCurrency
-  );
+  const formattedTotalCost = formatAmount(totalMonthlyCost, displayCurrency);
 
   // Pass filteredSubscriptions to child components through context
   const outletContext = React.useMemo(() => ({
-    filteredSubscriptions
+    filteredSubscriptions,
+    openAuthModal: () => setIsAuthModalOpen(true)
   }), [filteredSubscriptions]);
 
   if (authLoading) {
@@ -112,7 +111,6 @@ export default function Layout() {
             onClose={() => setIsMobileMenuOpen(false)}
             onAddSubscription={() => setIsModalOpen(true)}
             totalMonthlyCost={formattedTotalCost}
-            onSearch={setSearchQuery}
           />
           <div className="container mx-auto px-4 pt-20">
             <div className={`transition-all duration-300 ${isHeaderExpanded ? 'pt-24' : 'pt-0'}`}>
@@ -201,7 +199,7 @@ export default function Layout() {
       {user && (
         <Sidebar
           isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(!isSidebarOpen)}
+          onClose={() => setIsSidebarOpen(false)}
           totalMonthlyCost={formattedTotalCost}
         />
       )}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus } from 'lucide-react';
 import type { AssetTransaction, FinancialAsset } from '../types';
 import { useCurrency } from '../contexts/CurrencyContext';
@@ -30,7 +30,7 @@ export function TransactionModal({ isOpen, onClose, onAdd, onUpdate, assets, tra
   const [fees, setFees] = useState(transaction?.fees?.toString() || '');
   const [notes, setNotes] = useState(transaction?.notes || '');
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setAssetId(assets[0]?.id || '');
     setType('buy');
     setQuantity('');
@@ -38,7 +38,7 @@ export function TransactionModal({ isOpen, onClose, onAdd, onUpdate, assets, tra
     setDate(new Date().toISOString().split('T')[0]);
     setFees('');
     setNotes('');
-  };
+  }, [assets]);
 
   // Reset form when transaction prop changes
   useEffect(() => {
@@ -55,7 +55,7 @@ export function TransactionModal({ isOpen, onClose, onAdd, onUpdate, assets, tra
     } else {
       resetForm();
     }
-  }, [transaction, assets]);
+  }, [transaction, resetForm]);
 
   const { displayCurrency } = useCurrency();
   const isBTC = displayCurrency === 'BTC';

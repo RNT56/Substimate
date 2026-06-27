@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator as CalculatorIcon, RefreshCw, Bitcoin } from 'lucide-react';
+import { RefreshCw, Bitcoin } from 'lucide-react';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { fetchBitcoinPrices } from '../lib/marketData';
 

@@ -1,7 +1,6 @@
 import React from 'react';
 import { ActionButtons } from '../ActionButtons';
 import { useCurrency } from '../../contexts/CurrencyContext';
-import { format, parseISO } from 'date-fns';
 import { Plus } from 'lucide-react';
 import type { FinancialAsset } from '../../types';
 

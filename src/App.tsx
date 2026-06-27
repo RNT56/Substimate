@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useOutletContext } from 'react-router-dom';
 import Layout from './components/Layout';
 import { FinancePage } from './pages/FinancePage';
@@ -12,44 +13,24 @@ import { UsageStatistics } from './components/UsageStatistics';
 import { LandingPage } from './components/LandingPage';
 import { useAuth } from './contexts/AuthContext';
 import { useSubscriptions } from './contexts/SubscriptionContext';
-import { useFinancialData } from './hooks/useFinancialData';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { supabaseConfigError } from './lib/supabase';
 import type { Subscription } from './types';
-import { supabase } from './lib/supabase';
-import { useEffect } from 'react';
 
 interface LayoutContext {
   filteredSubscriptions: Subscription[];
+  openAuthModal: () => void;
 }
 
 function HomePage() {
   const { user, loading: authLoading } = useAuth();
-  const { updateSubscription, deleteSubscription, reorderSubscriptions } = useSubscriptions();
-  const { 
-    fixedExpenses,
-    variableExpenses,
-    incomeSources,
-    loading: financialDataLoading 
-  } = useFinancialData();
-  const { filteredSubscriptions } = useOutletContext<LayoutContext>();
-
-  // Handle auth session recovery
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, _session) => {
-      if (event === 'TOKEN_REFRESHED') {
-        console.log('Auth token refreshed');
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+  const { updateSubscription, reorderSubscriptions } = useSubscriptions();
+  const { filteredSubscriptions, openAuthModal } = useOutletContext<LayoutContext>();
 
   if (authLoading) {
     return (
@@ -60,15 +41,7 @@ function HomePage() {
   }
 
   if (!user) {
-    return <LandingPage onGetStarted={() => {}} />;
-  }
-
-  if (financialDataLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-400">Loading financial data...</div>
-      </div>
-    );
+    return <LandingPage onGetStarted={openAuthModal} />;
   }
 
   return (
@@ -76,16 +49,12 @@ function HomePage() {
       <SubscriptionList
         subscriptions={filteredSubscriptions}
         onUpdate={updateSubscription}
-        onDelete={deleteSubscription}
         onReorder={reorderSubscriptions}
       />
       {filteredSubscriptions.length > 0 && (
         <>
           <SubscriptionAnalytics 
             subscriptions={filteredSubscriptions}
-            fixedExpenses={fixedExpenses}
-            variableExpenses={variableExpenses}
-            incomeSources={incomeSources}
           />
           <UsageStatistics subscriptions={filteredSubscriptions} />
         </>
@@ -149,7 +118,25 @@ function App() {
   );
 }
 
+function MissingConfigurationPage({ message }: { message: string }) {
+  return (
+    <div className="min-h-screen bg-[#111111] text-white flex items-center justify-center px-6">
+      <div className="max-w-lg rounded-lg border border-white/10 bg-white/[0.03] p-6">
+        <h1 className="text-2xl font-semibold mb-3">Supabase Configuration Required</h1>
+        <p className="text-gray-300 mb-4">{message}</p>
+        <p className="text-gray-400 text-sm">
+          Create a local `.env` file from `.env.example` and set the public Supabase URL and anon key before running the app.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function AppWithProviders() {
+  if (supabaseConfigError) {
+    return <MissingConfigurationPage message={supabaseConfigError} />;
+  }
+
   return (
     <BrowserRouter>
       <ErrorBoundary fallback={

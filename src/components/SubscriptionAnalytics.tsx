@@ -10,17 +10,9 @@ import type { Subscription } from '../types';
 
 interface Props {
   subscriptions: Subscription[];
-  fixedExpenses: any[];
-  variableExpenses: any[];
-  incomeSources: any[];
 }
 
-export function SubscriptionAnalytics({ 
-  subscriptions,
-  fixedExpenses,
-  variableExpenses,
-  incomeSources
-}: Props) {
+export function SubscriptionAnalytics({ subscriptions }: Props) {
   const { isMobile } = useDevice();
   const { displayCurrency, formatAmount } = useCurrency();
   const {
@@ -32,7 +24,7 @@ export function SubscriptionAnalytics({
 
   return (
     <div className="space-y-8 mt-12">
-      <DashboardGrid subscriptions={subscriptions}>
+      <DashboardGrid>
         {/* Monthly Trends */}
         <div key="monthly-trends" className="h-full">
           <MonthlyTrends data={monthlyTrendsData} />

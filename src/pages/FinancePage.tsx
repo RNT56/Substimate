@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useFinancialData } from '../hooks/useFinancialData';
-import { useSubscriptions } from '../hooks/useSubscriptions';
+import { useSubscriptions } from '../contexts/SubscriptionContext';
 import { useFinanceAnalytics } from '../hooks/useFinanceAnalytics';
+import { useCurrency } from '../contexts/CurrencyContext';
 import { AssetManagementModal } from '../components/AssetManagementModal';
 import { TransactionModal } from '../components/TransactionModal';
 import { ExpenseModal } from '../components/ExpenseModal';
@@ -15,6 +16,7 @@ import { ExpenseList } from '../components/finance/ExpenseList';
 import { IncomeList } from '../components/finance/IncomeList';
 import { CategoryDistributionChart } from '../components/finance/CategoryDistributionChart';
 import type { FinancialAsset, AssetTransaction, FixedExpense, VariableExpense, Income } from '../types';
+import { convertSubscriptionMonthlyAmount } from '../lib/subscriptionCosts';
 
 export function FinancePage() {
   // Modal states
@@ -33,6 +35,7 @@ export function FinancePage() {
 
   // Hooks
   const { subscriptions } = useSubscriptions();
+  const { convertAmount } = useCurrency();
   const { 
     assets,
     transactions,
@@ -67,7 +70,7 @@ export function FinancePage() {
 
   // Calculate total subscription costs
   const totalSubscriptionCosts = subscriptions.reduce((sum, sub) => {
-    return sum + (sub.monthlyCost || 0);
+    return sum + convertSubscriptionMonthlyAmount(sub, 'EUR', convertAmount);
   }, 0);
 
   // Calculate financial metrics

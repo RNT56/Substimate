@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { format, parseISO } from 'date-fns';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 
@@ -21,7 +20,6 @@ interface Props {
 export function LifetimeCosts({ data, loading, isMobile }: Props) {
   const { theme, visualStyle } = useTheme();
   const { displayCurrency, formatAmount } = useCurrency();
-  const isDark = theme === 'dark';
   const isBTC = displayCurrency === 'BTC';
   const [chartColors, setChartColors] = useState({ btc: '#f7931a', default: '#8884d8' });
 

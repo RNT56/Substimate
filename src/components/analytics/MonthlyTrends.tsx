@@ -15,7 +15,6 @@ interface Props {
 export function MonthlyTrends({ data }: Props) {
   const { theme, visualStyle } = useTheme();
   const { displayCurrency, formatAmount } = useCurrency();
-  const isDark = theme === 'dark';
   const isBTC = displayCurrency === 'BTC';
 
   // Calculate the maximum value for better y-axis scaling

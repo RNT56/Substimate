@@ -12,22 +12,19 @@ const getEnvVars = () => {
     .filter(([, value]) => !value)
     .map(([key]) => key);
 
-  if (missingVars.length > 0) {
-    throw new Error(
-      `Missing required environment variables: ${missingVars.join(', ')}. ` +
-      'Please check your .env file.'
-    );
-  }
-
   return {
+    missingVars,
     supabase: {
-      url: requiredVars.VITE_SUPABASE_URL,
-      anonKey: requiredVars.VITE_SUPABASE_ANON_KEY
+      url: requiredVars.VITE_SUPABASE_URL || 'https://missing-config.supabase.co',
+      anonKey: requiredVars.VITE_SUPABASE_ANON_KEY || 'missing-anon-key'
     }
   };
 };
 
 const env = getEnvVars();
+export const supabaseConfigError = env.missingVars.length > 0
+  ? `Missing required environment variables: ${env.missingVars.join(', ')}. Please check your .env file.`
+  : null;
 
 // Create and configure Supabase client
 export const supabase = createClient<Database>(
@@ -48,11 +45,13 @@ export const supabase = createClient<Database>(
 );
 
 // Handle auth state changes
-supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-    // Clear any cached data
-    localStorage.removeItem('subscriptions');
-    localStorage.removeItem('categories');
-    localStorage.removeItem('dashboard_layout');
-  }
-});
+if (!supabaseConfigError) {
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_OUT') {
+      // Clear any cached data
+      localStorage.removeItem('subscriptions');
+      localStorage.removeItem('categories');
+      localStorage.removeItem('dashboard_layout');
+    }
+  });
+}

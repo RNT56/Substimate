@@ -1,13 +1,24 @@
-import React from 'react';
-import { Settings, Upload, Database, Bell, Shield, Palette } from 'lucide-react';
-import { useTheme, visualStyles as globalVisualStyles, VisualStyle } from '../contexts/ThemeContext';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Database, Bell, Shield, Palette } from 'lucide-react';
+import { useTheme, visualStyles as globalVisualStyles } from '../contexts/ThemeContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 
 export function SettingsPage() {
   const { theme, toggleTheme, visualStyle, setVisualStyle } = useTheme();
   const { displayCurrency } = useCurrency();
-  const isDark = theme === 'dark';
   const isBTC = displayCurrency === 'BTC';
+  const [paymentReminders, setPaymentReminders] = useState(() => {
+    return localStorage.getItem('substimate-payment-reminders') !== 'false';
+  });
+
+  const togglePaymentReminders = () => {
+    setPaymentReminders((enabled) => {
+      const nextValue = !enabled;
+      localStorage.setItem('substimate-payment-reminders', String(nextValue));
+      return nextValue;
+    });
+  };
 
   const sections = [
     {
@@ -65,16 +76,16 @@ export function SettingsPage() {
       settings: [
         {
           name: 'Import Data',
-          description: 'Import subscriptions from bank statements',
+          description: 'Import recurring subscriptions from a CSV file',
           control: (
-            <button
-              onClick={() => {}}
+            <Link
+              to="/import"
               className={`themed-button px-4 py-2 rounded-lg ${
                 isBTC ? 'text-[#f7931a]' : 'text-emerald-400'
               } hover:opacity-80`}
             >
               Import
-            </button>
+            </Link>
           )
         }
       ]
@@ -93,17 +104,17 @@ export function SettingsPage() {
                 type="checkbox"
                 id="payment-reminders"
                 className="sr-only"
-                checked={true}
-                onChange={() => {}}
+                checked={paymentReminders}
+                onChange={togglePaymentReminders}
               />
               <label
                 htmlFor="payment-reminders"
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  true ? 'bg-emerald-500' : 'bg-gray-700'
+                  paymentReminders ? 'bg-emerald-500' : 'bg-gray-700'
                 }`}
               >
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  true ? 'translate-x-6' : 'translate-x-1'
+                  paymentReminders ? 'translate-x-6' : 'translate-x-1'
                 }`} />
               </label>
             </div>
@@ -118,14 +129,9 @@ export function SettingsPage() {
       settings: [
         {
           name: 'Two-Factor Authentication',
-          description: 'Add an extra layer of security',
+          description: 'Managed through your Supabase authentication settings',
           control: (
-            <button
-              onClick={() => {}}
-              className="themed-button px-4 py-2 rounded-lg text-theme-secondary hover:text-theme-primary"
-            >
-              Enable
-            </button>
+            <span className="text-sm text-theme-secondary">Provider-managed</span>
           )
         }
       ]

@@ -1,9 +1,9 @@
 import React from 'react';
-import { DollarSign, Bitcoin, Euro } from 'lucide-react';
+import { DollarSign, Bitcoin, Euro, type LucideIcon } from 'lucide-react';
 import { useCurrency } from '../contexts/CurrencyContext';
 import type { Currency } from '../types';
 
-const CURRENCIES: { value: Currency; label: string; icon: React.FC }[] = [
+const CURRENCIES: { value: Currency; label: string; icon: LucideIcon }[] = [
   { value: 'EUR', label: 'EUR', icon: Euro },
   { value: 'USD', label: 'USD', icon: DollarSign },
   { value: 'BTC', label: 'BTC', icon: Bitcoin }

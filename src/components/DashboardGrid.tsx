@@ -15,14 +15,12 @@ import {
 } from '@dnd-kit/sortable';
 import { DraggableDashboardCard } from './DraggableDashboardCard';
 import { useDashboardLayout } from '../hooks/useDashboardLayout';
-import type { Subscription } from '../types';
 
 interface Props {
-  subscriptions: Subscription[];
   children: React.ReactNode[];
 }
 
-export function DashboardGrid({ subscriptions, children }: Props) {
+export function DashboardGrid({ children }: Props) {
   const { layout, loading, saveLayout } = useDashboardLayout();
   
   const sensors = useSensors(

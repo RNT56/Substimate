@@ -6,8 +6,9 @@ import { supabase } from '../lib/supabase';
 import { useDevice } from '../hooks/useDevice';
 import { DEFAULT_CATEGORIES } from '../lib/constants';
 import { DatePicker } from './DatePicker';
-import type { Subscription, PaymentMethod, BillingPeriod, PriceChangeOptions } from '../types';
+import type { Subscription, PaymentMethod, BillingPeriod } from '../types';
 import type { Currency } from '../types';
+import { SUPPORTED_CURRENCIES } from '../lib/subscriptionCosts';
 
 const PAYMENT_METHODS: PaymentMethod[] = [
   'credit_card',
@@ -29,12 +30,10 @@ const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   'crypto': 'Cryptocurrency'
 };
 
-const CURRENCIES: Currency[] = ['EUR', 'USD', 'BTC'];
-
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: (subscription: Subscription, priceChangeOptions?: PriceChangeOptions) => void;
+  onUpdate: (subscription: Subscription) => Promise<void> | void;
   subscription: Subscription;
 }
 
@@ -55,15 +54,11 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
   const [filteredPaymentMethods, setFilteredPaymentMethods] = useState<string[]>(PAYMENT_METHODS);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([...DEFAULT_CATEGORIES]);
   const [filteredCategories, setFilteredCategories] = useState<string[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [categoryError, setCategoryError] = useState<string | null>(null);
-  const [showPriceOptions, setShowPriceOptions] = useState(false);
-  const [priceChangeOptions, setPriceChangeOptions] = useState<PriceChangeOptions>({
-    applyToHistory: false,
-    effectiveDate: new Date().toISOString().split('T')[0]
-  });
-  const { convertAmount, displayCurrency } = useCurrency();
+  const { displayCurrency } = useCurrency();
   const { user } = useAuth();
   const { isMobile } = useDevice();
   const isBTC = displayCurrency === 'BTC';
@@ -76,52 +71,25 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
       setUrl(subscription.url || '');
       // For yearly billing, show the yearly amount in the cost field
       const costValue = subscription.monthlyCost || subscription.amount || 0;
-      const displayAmount = subscription.billingPeriod === 'yearly' 
-        ? costValue * 12 
+      const displayAmount = subscription.billingPeriod === 'yearly'
+        ? costValue * 12
         : costValue;
       setMonthlyCost(displayAmount.toString());
       setBillingPeriod(subscription.billingPeriod);
+      setCurrency(subscription.currency || 'EUR');
       setPaymentMethod(subscription.paymentMethod);
       setCategory(subscription.category);
       setStartDate(subscription.startDate.split('T')[0]);
-      
-      setPriceChangeOptions({
-        applyToHistory: false,
-        effectiveDate: new Date().toISOString().split('T')[0]
-      });
-      setShowPriceOptions(false);
     }
   }, [subscription]);
 
-  // Fetch user categories on mount
-  React.useEffect(() => {
-    if (user) {
-      fetchUserCategories();
+  const fetchUserCategories = React.useCallback(async () => {
+    if (!user) {
+      setAvailableCategories([...DEFAULT_CATEGORIES]);
+      setFilteredCategories([...DEFAULT_CATEGORIES]);
+      return;
     }
-  }, [user]);
 
-  // Scroll handling for mobile dropdowns
-  React.useEffect(() => {
-    if (!isMobile) return;
-
-    const adjustScroll = (ref: React.RefObject<HTMLDivElement>, show: boolean) => {
-      if (show && ref.current) {
-        const rect = ref.current.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
-        const bottomSpace = viewportHeight - rect.bottom;
-        
-        if (bottomSpace < 200) {
-          const scrollNeeded = 200 - bottomSpace;
-          window.scrollBy({ top: scrollNeeded, behavior: 'smooth' });
-        }
-      }
-    };
-
-    adjustScroll(paymentMethodRef, showPaymentMethods);
-    adjustScroll(categoryRef, showCategories);
-  }, [showPaymentMethods, showCategories, isMobile]);
-
-  const fetchUserCategories = async () => {
     try {
       setLoadingCategories(true);
       setCategoryError(null);
@@ -130,7 +98,7 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
       const { data: subscriptionsData = [], error } = await supabase
         .from('subscriptions')
         .select('category')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .not('category', 'is', null)
         .order('category');
 
@@ -145,26 +113,54 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
       });
 
       const sortedCategories = Array.from(allCategories).sort();
+      setAvailableCategories(sortedCategories);
       setFilteredCategories(sortedCategories);
     } catch (error) {
       console.error('Error loading categories:', error);
       setCategoryError(error instanceof Error ? error.message : 'Failed to load categories');
       // Fallback to default categories
+      setAvailableCategories([...DEFAULT_CATEGORIES]);
       setFilteredCategories([...DEFAULT_CATEGORIES]);
     } finally {
       setLoadingCategories(false);
     }
-  };
+  }, [user]);
+
+  // Fetch user categories on mount
+  React.useEffect(() => {
+    void fetchUserCategories();
+  }, [fetchUserCategories]);
+
+  // Scroll handling for mobile dropdowns
+  React.useEffect(() => {
+    if (!isMobile) return;
+
+    const adjustScroll = (ref: React.RefObject<HTMLDivElement>, show: boolean) => {
+      if (show && ref.current) {
+        const rect = ref.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const bottomSpace = viewportHeight - rect.bottom;
+
+        if (bottomSpace < 200) {
+          const scrollNeeded = 200 - bottomSpace;
+          window.scrollBy({ top: scrollNeeded, behavior: 'smooth' });
+        }
+      }
+    };
+
+    adjustScroll(paymentMethodRef, showPaymentMethods);
+    adjustScroll(categoryRef, showCategories);
+  }, [showPaymentMethods, showCategories, isMobile]);
 
   const handlePaymentMethodChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setPaymentMethod(value as PaymentMethod);
-    
+
     if (value.length === 0) {
       setFilteredPaymentMethods(PAYMENT_METHODS);
       setShowPaymentMethods(true);
     } else {
-      const filtered = PAYMENT_METHODS.filter(method => 
+      const filtered = PAYMENT_METHODS.filter(method =>
         method.toLowerCase().includes(value.toLowerCase())
       );
       setFilteredPaymentMethods(filtered);
@@ -177,10 +173,10 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
     setCategory(value);
 
     if (value.length === 0) {
-      setFilteredCategories([...DEFAULT_CATEGORIES]);
+      setFilteredCategories(availableCategories);
       setShowCategories(true);
     } else {
-      const filtered = filteredCategories.filter(cat => {
+      const filtered = availableCategories.filter(cat => {
         // Handle null/undefined categories
         if (!cat) return false;
         return cat.toLowerCase().includes(value.toLowerCase());
@@ -202,12 +198,12 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // prevent submitting if already in progress
     if (submitting) return;
-    
+
     setSubmitting(true);
-    
+
     // Store previous values for potential rollback
     const previousValues = {
       name: subscription.name,
@@ -216,38 +212,34 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
       billingPeriod: subscription.billingPeriod,
       paymentMethod: subscription.paymentMethod,
       category: subscription.category,
-      startDate: subscription.startDate
+      startDate: subscription.startDate,
+      currency: subscription.currency || 'EUR'
     };
 
     let formattedUrl = url;
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       formattedUrl = `https://${url}`;
     }
-    
+
     // Calculate monthly cost based on billing period
     const inputAmount = parseFloat(monthlyCost);
-    const calculatedMonthlyCost = billingPeriod === 'yearly' 
-      ? inputAmount / 12  // Store monthly equivalent for yearly subscriptions
-      : inputAmount;      // Store as-is for monthly subscriptions
-    
-    const costInEUR = convertAmount(calculatedMonthlyCost, currency, 'EUR');
-    
-    let priceChangeOpts = undefined;
-    if (costInEUR !== subscription.monthlyCost) {
-      priceChangeOpts = {
-        applyToHistory: priceChangeOptions.applyToHistory,
-        effectiveDate: priceChangeOptions.applyToHistory ? 
-          subscription.startDate : 
-          new Date(priceChangeOptions.effectiveDate).toISOString()
-      };
+    if (!Number.isFinite(inputAmount) || inputAmount < 0) {
+      setSubmitting(false);
+      return;
     }
+
+    const calculatedMonthlyCost = billingPeriod === 'yearly'
+      ? inputAmount / 12
+      : inputAmount;
 
     try {
       const updatedSubscription = {
         ...subscription,
         name,
         url: formattedUrl,
-        monthlyCost: costInEUR,
+        monthlyCost: calculatedMonthlyCost,
+        amount: calculatedMonthlyCost,
+        currency,
         billingPeriod,
         paymentMethod: paymentMethod as PaymentMethod,
         category: category || 'Other',
@@ -256,9 +248,10 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
 
       // Close modal immediately for better UX
       onClose();
-      
+
       // Perform update in background
-      await onUpdate(updatedSubscription, priceChangeOpts);
+      await onUpdate(updatedSubscription);
+      setSubmitting(false);
     } catch (error) {
       console.error('Error updating subscription:', error);
       // Restore previous values on error
@@ -266,6 +259,7 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
       setUrl(previousValues.url);
       setMonthlyCost(previousValues.monthlyCost.toString());
       setBillingPeriod(previousValues.billingPeriod);
+      setCurrency(previousValues.currency);
       setPaymentMethod(previousValues.paymentMethod);
       setCategory(previousValues.category);
       setStartDate(previousValues.startDate.split('T')[0]);
@@ -289,9 +283,9 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
               </div>
             </div>
           )}
-        
+
           <h2 className="text-2xl font-bold mb-6 text-theme-primary">Edit Subscription</h2>
-          
+
           <form onSubmit={handleSubmit}>
             <div className="space-y-6">
               <div>
@@ -326,11 +320,6 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
                       value={monthlyCost}
                       onChange={(e) => {
                         setMonthlyCost(e.target.value);
-                        if (parseFloat(e.target.value) !== subscription.monthlyCost) {
-                          setShowPriceOptions(true);
-                        } else {
-                          setShowPriceOptions(false);
-                        }
                       }}
                       className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       required
@@ -343,50 +332,12 @@ export function EditSubscriptionModal({ isOpen, onClose, onUpdate, subscription 
                       onChange={(e) => setCurrency(e.target.value as Currency)}
                       className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     >
-                      {CURRENCIES.map(curr => (
+                      {SUPPORTED_CURRENCIES.map(curr => (
                         <option key={curr} value={curr}>{curr}</option>
                       ))}
                     </select>
                   </div>
                 </div>
-
-                {showPriceOptions && (
-                  <div className="themed-card rounded-lg p-4 space-y-4">
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        id="applyToHistory"
-                        checked={priceChangeOptions.applyToHistory}
-                        onChange={(e) => setPriceChangeOptions(prev => ({
-                          ...prev,
-                          applyToHistory: e.target.checked
-                        }))}
-                        className="rounded border-gray-400 w-5 h-5"
-                      />
-                      <label htmlFor="applyToHistory" className="text-theme-primary">
-                        Apply price change to all previous months
-                      </label>
-                    </div>
-                    
-                    <div className={`space-y-2 overflow-hidden transition-all duration-300 ${
-                      priceChangeOptions.applyToHistory ? 'h-0 opacity-0' : 'h-20 opacity-100'
-                    }`}>
-                      <label className="block text-theme-secondary">
-                        Price change effective from:
-                      </label>
-                      <DatePicker
-                        value={priceChangeOptions.effectiveDate}
-                        onChange={(value) => setPriceChangeOptions(prev => ({
-                          ...prev,
-                          effectiveDate: value
-                        }))}
-                        min={subscription.startDate.split('T')[0]}
-                        max={new Date().toISOString().split('T')[0]}
-                        disabled={priceChangeOptions.applyToHistory}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">

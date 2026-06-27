@@ -32,14 +32,15 @@ RETURNS TABLE (
 ) 
 LANGUAGE sql
 SECURITY DEFINER
+SET search_path = public
 AS $$
   SELECT 
-    category,
+    subscriptions.category,
     COUNT(*) as subscription_count
   FROM subscriptions 
-  WHERE user_id = $1 
-  GROUP BY category
-  ORDER BY category;
+  WHERE subscriptions.user_id = auth.uid()
+  GROUP BY subscriptions.category
+  ORDER BY subscriptions.category;
 $$;
 
 -- Add constraint to ensure category is not empty

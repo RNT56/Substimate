@@ -45,6 +45,7 @@ CREATE OR REPLACE FUNCTION handle_category_operation(
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 BEGIN
   -- Validate operation
@@ -52,11 +53,15 @@ BEGIN
     RAISE EXCEPTION 'Invalid operation';
   END IF;
 
+  IF p_user_id IS DISTINCT FROM auth.uid() THEN
+    RAISE EXCEPTION 'Access denied';
+  END IF;
+
   -- Handle add operation
   IF p_operation = 'add' THEN
     -- Add category if it doesn't exist
     INSERT INTO user_categories (user_id, name)
-    VALUES (p_user_id, p_category_name)
+    VALUES (auth.uid(), p_category_name)
     ON CONFLICT (user_id, name) DO NOTHING;
   END IF;
 
@@ -64,11 +69,11 @@ BEGIN
   IF p_operation = 'remove' THEN
     -- Only remove if no subscriptions use this category
     DELETE FROM user_categories
-    WHERE user_id = p_user_id
+    WHERE user_id = auth.uid()
     AND name = p_category_name
     AND NOT EXISTS (
       SELECT 1 FROM subscriptions
-      WHERE user_id = p_user_id
+      WHERE user_id = auth.uid()
       AND category = p_category_name
     );
   END IF;

@@ -52,7 +52,7 @@ export function LandingPage({ onGetStarted }: Props) {
     {
       icon: Wallet,
       title: 'Budget Better',
-      description: 'Plan your finances with accurate monthly cost predictions.'
+      description: 'Compare recurring costs against income and other expenses.'
     }
   ];
 
@@ -164,7 +164,7 @@ export function LandingPage({ onGetStarted }: Props) {
           Ready to Take Control?
         </h2>
         <p className="text-xl text-theme-secondary max-w-2xl mx-auto">
-          Join thousands of users who are already saving money and managing their subscriptions better.
+          Create an account to start tracking your subscriptions and finance data.
         </p>
         <button
           onClick={onGetStarted}

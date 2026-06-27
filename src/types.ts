@@ -17,14 +17,17 @@ export interface CategoryAnalytics {
   averageCostPerService: number;
 }
 
-export interface PriceChangeOptions {
-  applyToHistory: boolean;
-  effectiveDate: string;
-}
-
 export type PaymentMethod = 'credit_card' | 'debit_card' | 'paypal' | 'bank_transfer' | 'apple_pay' | 'google_pay' | 'crypto';
 export type BillingPeriod = 'monthly' | 'yearly';
-export type Currency = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'CAD' | 'AUD' | 'CHF' | 'CNY' | 'BTC' | 'ETH';
+export type Currency = 'EUR' | 'USD' | 'BTC';
+
+export interface CurrencyPreference {
+  displayCurrency: Currency;
+  exchangeRates: Record<Currency, number>;
+  lastUpdated: string;
+}
+
+export type DashboardLayout = string[];
 
 export interface Subscription {
   id: string;

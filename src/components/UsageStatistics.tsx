@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ArrowUpDown, TrendingUp, TrendingDown } from 'lucide-react';
 import type { Subscription, PaymentMethodStats } from '../types';
-import { getSubscriptionCategory } from '../utils/subscriptionPredictions';
 import { DashboardGrid } from './DashboardGrid';
-import { format, parseISO, differenceInMonths, startOfMonth, isSameMonth } from 'date-fns';
+import { parseISO } from 'date-fns';
 import { useCurrency } from '../contexts/CurrencyContext';
-import { useDevice } from '../hooks/useDevice';
-import { useTheme } from '../contexts/ThemeContext';
+import { convertSubscriptionMonthlyAmount } from '../lib/subscriptionCosts';
 
 interface Props {
   subscriptions: Subscription[];
@@ -19,12 +17,7 @@ export function UsageStatistics({ subscriptions }: Props) {
   const [sortKey, setSortKey] = React.useState<SortKey>('usage');
   const [sortDirection, setSortDirection] = React.useState<SortDirection>('asc');
   const { displayCurrency, convertAmount, formatAmount } = useCurrency();
-  const { isMobile } = useDevice();
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
   const isBTC = displayCurrency === 'BTC';
-
-  const [timeframe, setTimeframe] = useState<'all' | 'lastMonth' | 'lastQuarter' | 'lastYear'>('all');
 
   // Calculate subscription trends
   const trends = React.useMemo(() => {
@@ -43,15 +36,11 @@ export function UsageStatistics({ subscriptions }: Props) {
     });
 
     const recentMonthlyCost = recentSubs.reduce((sum, sub) => {
-      const monthlyCost = sub.billingPeriod === 'yearly' ? (sub.monthlyCost ?? 0) / 12 : (sub.monthlyCost ?? 0);
-      const convertedCost = convertAmount(monthlyCost, 'EUR', displayCurrency);
-      return sum + convertedCost;
+      return sum + convertSubscriptionMonthlyAmount(sub, displayCurrency, convertAmount);
     }, 0);
 
     const olderMonthlyCost = olderSubs.reduce((sum, sub) => {
-      const monthlyCost = sub.billingPeriod === 'yearly' ? (sub.monthlyCost ?? 0) / 12 : (sub.monthlyCost ?? 0);
-      const convertedCost = convertAmount(monthlyCost, 'EUR', displayCurrency);
-      return sum + convertedCost;
+      return sum + convertSubscriptionMonthlyAmount(sub, displayCurrency, convertAmount);
     }, 0);
 
     const activeCount = subscriptions.filter(sub => sub.usageState === 'active').length;
@@ -95,8 +84,7 @@ export function UsageStatistics({ subscriptions }: Props) {
       };
     }
     
-    const monthlyCost = sub.billingPeriod === 'yearly' ? (sub.monthlyCost ?? 0) / 12 : (sub.monthlyCost ?? 0);
-    const convertedCost = convertAmount(monthlyCost, 'EUR', displayCurrency);
+    const convertedCost = convertSubscriptionMonthlyAmount(sub, displayCurrency, convertAmount);
     
     acc[sub.paymentMethod].totalCost += convertedCost;
     acc[sub.paymentMethod].subscriptionCount += 1;
@@ -108,7 +96,7 @@ export function UsageStatistics({ subscriptions }: Props) {
 
   // Calculate category usage statistics
   const categoryUsage = subscriptions.reduce<Record<string, { active: number; notMuch: number; unused: number; total: number; totalCost: number }>>((acc, sub) => {
-    const category = getSubscriptionCategory(sub.name);
+    const category = sub.category || 'Other';
     if (!acc[category]) {
       acc[category] = { active: 0, notMuch: 0, unused: 0, total: 0, totalCost: 0 };
     }
@@ -116,9 +104,7 @@ export function UsageStatistics({ subscriptions }: Props) {
     acc[category][usageState === 'not much' ? 'notMuch' : usageState] += 1;
     acc[category].total += 1;
 
-    const categoryMonthlyCost = sub.billingPeriod === 'yearly' ? (sub.monthlyCost ?? 0) / 12 : (sub.monthlyCost ?? 0);
-    const categoryConvertedCost = convertAmount(categoryMonthlyCost, 'EUR', displayCurrency);
-    acc[category].totalCost += categoryConvertedCost;
+    acc[category].totalCost += convertSubscriptionMonthlyAmount(sub, displayCurrency, convertAmount);
 
     return acc;
   }, {});
@@ -132,10 +118,8 @@ export function UsageStatistics({ subscriptions }: Props) {
         comparison = a.name.localeCompare(b.name);
         break;
       case 'cost':
-        const aMonthlyCost = a.billingPeriod === 'yearly' ? (a.monthlyCost ?? 0) / 12 : (a.monthlyCost ?? 0);
-        const bMonthlyCost = b.billingPeriod === 'yearly' ? (b.monthlyCost ?? 0) / 12 : (b.monthlyCost ?? 0);
-        const aConverted = convertAmount(aMonthlyCost, 'EUR', displayCurrency);
-        const bConverted = convertAmount(bMonthlyCost, 'EUR', displayCurrency);
+        const aConverted = convertSubscriptionMonthlyAmount(a, displayCurrency, convertAmount);
+        const bConverted = convertSubscriptionMonthlyAmount(b, displayCurrency, convertAmount);
         comparison = aConverted - bConverted;
         break;
       case 'usage':
@@ -408,8 +392,7 @@ export function UsageStatistics({ subscriptions }: Props) {
           </thead>
           <tbody>
             {sortedSubscriptions.map(sub => {
-              const monthlyCost = sub.billingPeriod === 'yearly' ? (sub.monthlyCost ?? 0) / 12 : (sub.monthlyCost ?? 0);
-              const convertedCost = convertAmount(monthlyCost, 'EUR', displayCurrency);
+              const convertedCost = convertSubscriptionMonthlyAmount(sub, displayCurrency, convertAmount);
               const formattedCost = formatAmount(convertedCost, displayCurrency);
 
               return (
@@ -439,7 +422,7 @@ export function UsageStatistics({ subscriptions }: Props) {
 
   return (
     <div className="space-y-8 mt-12">
-      <DashboardGrid subscriptions={subscriptions}>
+      <DashboardGrid>
         {dashboardCards}
       </DashboardGrid>
     </div>

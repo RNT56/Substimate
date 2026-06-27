@@ -28,6 +28,7 @@ export interface Link {
 export interface PriceHistory {
   subscription_id: string;
   monthly_cost: number;
+  currency?: string | null;
   effective_from: string;
 }
 
@@ -54,6 +55,7 @@ export interface Props {
     id: string;
     category: string;
     monthlyCost: number;
+    currency: string;
     name: string;
     billingPeriod: string;
     usageState: string;

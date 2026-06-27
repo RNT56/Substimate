@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   differenceInMonths,
   differenceInYears,
   parseISO, 
   format, 
-  startOfMonth, 
   endOfMonth, 
   eachMonthOfInterval, 
   subMonths, 
@@ -16,6 +15,18 @@ import { supabase } from '../lib/supabase';
 import { useCurrency } from '../contexts/CurrencyContext';
 import type { Subscription, LifetimeCostData, CategoryAnalytics } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import {
+  convertSubscriptionMonthlyAmount,
+  convertSubscriptionPaymentAmount,
+  getSubscriptionMonthlyAmount,
+  normalizeCurrency
+} from '../lib/subscriptionCosts';
+
+interface PriceHistoryRow {
+  monthly_cost: number;
+  effective_from: string;
+  currency?: string | null;
+}
 
 export function useSubscriptionAnalytics(subscriptions: Subscription[]) {
   const [lifetimeCostsData, setLifetimeCostsData] = useState<LifetimeCostData[]>([]);
@@ -23,41 +34,8 @@ export function useSubscriptionAnalytics(subscriptions: Subscription[]) {
   const { convertAmount, displayCurrency } = useCurrency();
   const { user } = useAuth();
 
-  // Subscribe to real-time changes
-  useEffect(() => {
-    if (!user) return;
-
-    const subscription = supabase
-      .channel('subscription-analytics')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'subscriptions',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => calculateLifetimeCosts()
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'subscription_price_history',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => calculateLifetimeCosts()
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [user]);
-
   // Calculate lifetime costs whenever subscriptions or currency changes
-  const calculateLifetimeCosts = async () => {
+  const calculateLifetimeCosts = useCallback(async () => {
     if (!subscriptions.length) {
       setLifetimeCostsData([]);
       setLoading(false);
@@ -76,11 +54,13 @@ export function useSubscriptionAnalytics(subscriptions: Subscription[]) {
         // Get all price history for this subscription
         const { data: priceHistory, error } = await supabase
           .from('subscription_price_history')
-          .select('monthly_cost, effective_from')
+          .select('monthly_cost, effective_from, currency')
           .eq('subscription_id', sub.id)
           .order('effective_from', { ascending: true });
 
         if (error) throw error;
+
+        const history = (priceHistory ?? []) as PriceHistoryRow[];
 
         if (sub.billingPeriod === 'yearly') {
           // For yearly subscriptions, we only charge once per year
@@ -97,29 +77,35 @@ export function useSubscriptionAnalytics(subscriptions: Subscription[]) {
           }
 
           // Get the yearly cost (monthly_cost is already stored as monthly equivalent)
-          const yearlyCost = sub.monthlyCost * 12;
+          const yearlyCost = getSubscriptionMonthlyAmount(sub) * 12;
           totalSpent = yearlyCost;
 
           // Handle price history if it exists
-          if (priceHistory?.length) {
+          if (history.length) {
             totalSpent = 0; // Reset to recalculate with historical prices
             let nextAnniversary = startDate;
 
             for (let year = 0; year < completedPayments; year++) {
               // Find the price that was active at this anniversary
-              const applicablePrice = priceHistory
+              const applicablePrice = history
                 .filter(entry => !isAfter(parseISO(entry.effective_from), nextAnniversary))
                 .sort((a, b) => 
                   parseISO(b.effective_from).getTime() - parseISO(a.effective_from).getTime()
                 )[0];
 
               const yearlyAmount = applicablePrice 
-                ? parseFloat(applicablePrice.monthly_cost) * 12
-                : yearlyCost;
+                ? convertAmount(
+                    Number(applicablePrice.monthly_cost) * 12,
+                    normalizeCurrency(applicablePrice.currency || sub.currency),
+                    displayCurrency
+                  )
+                : convertSubscriptionPaymentAmount(sub, displayCurrency, convertAmount);
 
               totalSpent += yearlyAmount;
               nextAnniversary = addYears(nextAnniversary, 1);
             }
+          } else {
+            totalSpent = convertSubscriptionPaymentAmount(sub, displayCurrency, convertAmount);
           }
         } else {
           // For monthly subscriptions, calculate month by month
@@ -129,17 +115,21 @@ export function useSubscriptionAnalytics(subscriptions: Subscription[]) {
           });
 
           for (const month of monthTimeline) {
-            let monthlyPrice = sub.monthlyCost;
+            let monthlyPrice = convertSubscriptionMonthlyAmount(sub, displayCurrency, convertAmount);
             
-            if (priceHistory?.length) {
-              const applicablePrice = priceHistory
+            if (history.length) {
+              const applicablePrice = history
                 .filter(entry => !isAfter(parseISO(entry.effective_from), endOfMonth(month)))
                 .sort((a, b) => 
                   parseISO(b.effective_from).getTime() - parseISO(a.effective_from).getTime()
                 )[0];
 
               if (applicablePrice) {
-                monthlyPrice = parseFloat(applicablePrice.monthly_cost);
+                monthlyPrice = convertAmount(
+                  Number(applicablePrice.monthly_cost),
+                  normalizeCurrency(applicablePrice.currency || sub.currency),
+                  displayCurrency
+                );
               }
             }
 
@@ -147,21 +137,16 @@ export function useSubscriptionAnalytics(subscriptions: Subscription[]) {
           }
         }
 
-        const convertedTotalSpent = convertAmount(totalSpent, 'EUR', displayCurrency);
-        const convertedMonthlyCost = convertAmount(
-          sub.monthlyCost,
-          'EUR',
-          displayCurrency
-        );
+        const convertedMonthlyCost = convertSubscriptionMonthlyAmount(sub, displayCurrency, convertAmount);
 
         return {
           name: sub.name,
-          totalSpent: convertedTotalSpent,
+          totalSpent,
           monthlyCost: convertedMonthlyCost,
           months,
           startDate: sub.startDate,
           billingPeriod: sub.billingPeriod,
-          usageState: sub.usageState
+          usageState: sub.usageState || 'active'
         };
       }));
 
@@ -171,12 +156,49 @@ export function useSubscriptionAnalytics(subscriptions: Subscription[]) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [subscriptions, displayCurrency, convertAmount]);
+
+  // Subscribe to real-time changes
+  useEffect(() => {
+    if (!user) return;
+
+    const subscription = supabase
+      .channel('subscription-analytics')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'subscriptions',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          void calculateLifetimeCosts();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'subscription_price_history',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          void calculateLifetimeCosts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [user, calculateLifetimeCosts]);
 
   // Run calculations when dependencies change
   useEffect(() => {
-    calculateLifetimeCosts();
-  }, [subscriptions, displayCurrency, convertAmount]);
+    void calculateLifetimeCosts();
+  }, [calculateLifetimeCosts]);
 
   // Calculate category analytics using actual subscription categories
   const categoryData = React.useMemo(() => {
@@ -190,7 +212,7 @@ export function useSubscriptionAnalytics(subscriptions: Subscription[]) {
           averageCostPerService: 0
         };
       }
-      const convertedCost = convertAmount(sub.monthlyCost, 'EUR', displayCurrency);
+      const convertedCost = convertSubscriptionMonthlyAmount(sub, displayCurrency, convertAmount);
       acc[category].totalCost += convertedCost;
       acc[category].subscriptionCount += 1;
       acc[category].averageCostPerService = acc[category].totalCost / acc[category].subscriptionCount;
@@ -207,7 +229,6 @@ export function useSubscriptionAnalytics(subscriptions: Subscription[]) {
     const months = eachMonthOfInterval({ start: sixMonthsAgo, end: now });
 
     return months.map(month => {
-      const monthStart = startOfMonth(month);
       const monthEnd = endOfMonth(month);
 
       // Calculate total cost for this month from active subscriptions
@@ -223,18 +244,18 @@ export function useSubscriptionAnalytics(subscriptions: Subscription[]) {
             // For yearly subscriptions, only add cost on anniversary months
             if (isSameMonth(month, subscriptionStart) || 
                 isSameMonth(month, addYears(subscriptionStart, Math.floor(differenceInMonths(month, subscriptionStart) / 12)))) {
-              return sum + (sub.monthlyCost * 12); // Add full yearly cost
+              return sum + convertSubscriptionPaymentAmount(sub, displayCurrency, convertAmount);
             }
             return sum; // No cost in non-anniversary months
           }
           
           // For monthly subscriptions, add the monthly cost
-          return sum + sub.monthlyCost;
+          return sum + convertSubscriptionMonthlyAmount(sub, displayCurrency, convertAmount);
         }, 0);
 
       return {
         month: format(month, 'MMM yyyy'),
-        totalCost: convertAmount(totalCost, 'EUR', displayCurrency)
+        totalCost
       };
     });
   }, [subscriptions, displayCurrency, convertAmount]);

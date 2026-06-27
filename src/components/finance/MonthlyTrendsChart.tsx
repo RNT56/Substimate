@@ -3,7 +3,6 @@ import {
   ResponsiveContainer,
   ComposedChart,
   Area,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -33,8 +32,6 @@ interface Props {
 export function MonthlyTrendsChart({ data }: Props) {
   const { theme, visualStyle } = useTheme();
   const { displayCurrency, formatAmount } = useCurrency();
-  const isDark = theme === 'dark';
-  const isBTC = displayCurrency === 'BTC';
 
   // Calculate the maximum value for the y-axis
   const maxValue = Math.max(
@@ -49,7 +46,7 @@ export function MonthlyTrendsChart({ data }: Props) {
   // Round up to a nice number for the y-axis
   const yAxisMax = Math.ceil(maxValue / 1000) * 1000;
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: any) => {
     // Get theme/style from parent scope
     const currentTheme = theme;
     const currentStyle = visualStyle;

@@ -159,10 +159,10 @@ The public branch is intentionally minimal:
 
 ## Roadmap
 
-- Add import and export workflows for recurring costs.
-- Improve bundle splitting for smaller initial downloads.
+- Add export workflows for recurring costs and finance records.
 - Expand reporting for long-term cash flow and savings scenarios.
 - Add optional backend or edge functions for provider integrations that require private keys.
+- Add focused test coverage around import parsing, currency conversion, and Supabase data transforms.
 
 ## License
 

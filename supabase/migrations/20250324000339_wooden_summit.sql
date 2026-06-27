@@ -58,7 +58,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Drop and recreate the trigger
 DROP TRIGGER IF EXISTS subscription_price_change_trigger ON subscriptions;

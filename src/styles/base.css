@@ -176,7 +176,7 @@
   --chart-axis-line-stroke: var(--chart-axis-color);
   --chart-tick-line-stroke: var(--chart-axis-color);
   /* New Variables from ExpenseBreakdown */
-  --chart-tooltip-cursor-fill: rgba(156, 163, 175, 0.1); /* TODO: Adjust for dark theme? Maybe lighter base with alpha? */
+  --chart-tooltip-cursor-fill: rgba(156, 163, 175, 0.1);
   --chart-tick-font-size: 12px;
   /* New Variables for PieChart */
   --chart-pie-cell-stroke: var(--background-primary); /* Default to background */
@@ -219,11 +219,11 @@ html[data-visual-style="base"] .themed-card:hover {
 /*
 html[data-visual-style="base"] .themed-modal {
   background-color: var(--card-bg);
-  border: var(--card-border); 
-  box-shadow: var(--card-shadow); 
+  border: var(--card-border);
+  box-shadow: var(--card-shadow);
   color: var(--text-primary);
-  padding: 1.5rem; 
-  border-radius: 0.75rem; 
+  padding: 1.5rem;
+  border-radius: 0.75rem;
 }
 */
 
@@ -280,4 +280,4 @@ html[data-visual-style="base"][data-theme="light"] {
 }
 html[data-visual-style="base"][data-theme="dark"] {
   --accent-color: var(--accent-color-dark);
-} 
+}

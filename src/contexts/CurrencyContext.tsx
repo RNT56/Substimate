@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import type { Currency, CurrencyPreference } from '../types';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
@@ -14,7 +14,7 @@ interface CurrencyContextType {
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
-const DEFAULT_EXCHANGE_RATES = {
+const DEFAULT_EXCHANGE_RATES: Record<Currency, number> = {
   EUR: 1,
   USD: 1.08,
   BTC: 0.000023
@@ -29,18 +29,74 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const updateInProgress = useRef(false);
 
+  const updateUserPreference = useCallback(async (newPreference: CurrencyPreference) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('currency_preferences')
+        .upsert({
+          user_id: user.id,
+          display_currency: newPreference.displayCurrency,
+          exchange_rates: newPreference.exchangeRates,
+          last_updated: newPreference.lastUpdated
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating currency preference:', error);
+      throw error;
+    }
+  }, [user]);
+
+  const fetchUserPreference = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('currency_preferences')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setPreference({
+          displayCurrency: (data.display_currency as Currency) || 'EUR',
+          exchangeRates: {
+            ...DEFAULT_EXCHANGE_RATES,
+            ...(data.exchange_rates as Partial<Record<Currency, number>>)
+          },
+          lastUpdated: data.last_updated
+        });
+      } else {
+        const defaultPreference = {
+          displayCurrency: 'EUR' as const,
+          exchangeRates: DEFAULT_EXCHANGE_RATES,
+          lastUpdated: new Date().toISOString()
+        };
+        await updateUserPreference(defaultPreference);
+        setPreference(defaultPreference);
+      }
+    } catch (error) {
+      console.error('Error fetching currency preference:', error);
+    }
+  }, [user, updateUserPreference]);
+
   useEffect(() => {
     if (user) {
-      fetchUserPreference();
+      void fetchUserPreference();
     } else {
-      // Reset to defaults when user logs out
       setPreference({
         displayCurrency: 'EUR',
         exchangeRates: DEFAULT_EXCHANGE_RATES,
         lastUpdated: new Date().toISOString()
       });
     }
-  }, [user]);
+  }, [user, fetchUserPreference]);
 
   useEffect(() => {
     // Update data-currency attribute on root element
@@ -48,8 +104,6 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   }, [preference.displayCurrency]);
 
   useEffect(() => {
-    let intervalId: number;
-
     // Update exchange rates every hour
     const updateRates = async () => {
       if (!user || updateInProgress.current) return;
@@ -72,7 +126,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
           .from('currency_preferences')
           .select('last_updated')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (currentData) {
           const dbLastUpdate = new Date(currentData.last_updated);
@@ -132,69 +186,14 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     updateRates();
 
     // Set up interval for updates
-    intervalId = window.setInterval(updateRates, 60000); // Check every minute, but only update if needed
+    const intervalId = window.setInterval(updateRates, 60000); // Check every minute, but only update if needed
 
     return () => {
       if (intervalId) window.clearInterval(intervalId);
     };
-  }, [user, preference.lastUpdated]);
+  }, [user, preference, fetchUserPreference]);
 
-  const fetchUserPreference = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('currency_preferences')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (data) {
-        setPreference({
-          displayCurrency: data.display_currency,
-          exchangeRates: data.exchange_rates,
-          lastUpdated: data.last_updated
-        });
-      } else {
-        // Create default preference if none exists
-        const defaultPreference = {
-          displayCurrency: 'EUR',
-          exchangeRates: DEFAULT_EXCHANGE_RATES,
-          lastUpdated: new Date().toISOString()
-        };
-        await updateUserPreference(defaultPreference);
-        setPreference(defaultPreference);
-      }
-    } catch (error) {
-      console.error('Error fetching currency preference:', error);
-    }
-  };
-
-  const updateUserPreference = async (newPreference: CurrencyPreference) => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('currency_preferences')
-        .upsert({
-          user_id: user.id,
-          display_currency: newPreference.displayCurrency,
-          exchange_rates: newPreference.exchangeRates,
-          last_updated: newPreference.lastUpdated
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error updating currency preference:', error);
-      throw error;
-    }
-  };
-
-  const setDisplayCurrency = async (currency: Currency) => {
+  const setDisplayCurrency = useCallback(async (currency: Currency) => {
     try {
       const newPreference = {
         ...preference,
@@ -213,23 +212,27 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
       setPreference(preference);
       throw error;
     }
-  };
+  }, [preference, updateUserPreference, user]);
 
-  const convertAmount = (amount: number, fromCurrency: Currency, toCurrency: Currency): number => {
+  const convertAmount = useCallback((amount: number, fromCurrency: Currency, toCurrency: Currency): number => {
     if (fromCurrency === toCurrency) return amount;
+
+    const fromRate = preference.exchangeRates[fromCurrency] || DEFAULT_EXCHANGE_RATES[fromCurrency];
+    const toRate = preference.exchangeRates[toCurrency] || DEFAULT_EXCHANGE_RATES[toCurrency];
+    if (!Number.isFinite(amount) || !fromRate || !toRate) return 0;
 
     // Convert to EUR first (base currency)
     const amountInEUR = fromCurrency === 'EUR' 
       ? amount 
-      : amount / preference.exchangeRates[fromCurrency];
+      : amount / fromRate;
 
     // Convert from EUR to target currency
     return toCurrency === 'EUR'
       ? amountInEUR
-      : amountInEUR * preference.exchangeRates[toCurrency];
-  };
+      : amountInEUR * toRate;
+  }, [preference.exchangeRates]);
 
-  const formatAmount = (amount: number, currency: Currency): string => {
+  const formatAmount = useCallback((amount: number, currency: Currency): string => {
     switch (currency) {
       case 'EUR':
         return new Intl.NumberFormat('de-DE', {
@@ -255,7 +258,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
       default:
         return amount.toFixed(2);
     }
-  };
+  }, []);
 
   return (
     <CurrencyContext.Provider value={{

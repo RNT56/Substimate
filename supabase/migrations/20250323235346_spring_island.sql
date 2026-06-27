@@ -32,14 +32,15 @@ RETURNS TABLE (
 ) 
 LANGUAGE sql
 SECURITY DEFINER
+SET search_path = public
 AS $$
   SELECT 
-    category,
+    subscriptions.category,
     COUNT(*) as subscription_count
   FROM subscriptions 
-  WHERE user_id = $1 
-  GROUP BY category
-  ORDER BY category;
+  WHERE subscriptions.user_id = auth.uid()
+  GROUP BY subscriptions.category
+  ORDER BY subscriptions.category;
 $$;
 
 -- Add constraint to ensure category is not empty
@@ -79,7 +80,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Drop and recreate the trigger
 DROP TRIGGER IF EXISTS subscription_price_change_trigger ON subscriptions;

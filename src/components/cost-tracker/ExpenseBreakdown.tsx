@@ -13,7 +13,6 @@ interface Props {
 export function ExpenseBreakdown({ data }: Props) {
   const { theme, visualStyle } = useTheme();
   const { displayCurrency, formatAmount } = useCurrency();
-  const isDark = theme === 'dark';
   const isBTC = displayCurrency === 'BTC';
   const chartRef = useRef<HTMLDivElement>(null);
   const [computedStyles, setComputedStyles] = useState({
@@ -31,19 +30,6 @@ export function ExpenseBreakdown({ data }: Props) {
   useEffect(() => {
     if (chartRef.current) {
       const styles = getComputedStyle(chartRef.current);
-      // Helper to parse the bar radius (adjust if format changes)
-      const parseRadius = (radiusString: string | null): number[] => {
-        if (!radiusString) return [4, 4, 0, 0];
-        const parts = radiusString.trim().split(' ').map(p => parseInt(p.replace('px', ''), 10));
-        // Assuming top-left, top-right, bottom-right, bottom-left CSS order
-        // Recharts needs [tl, tr, bl, br] - seems CSS order maps directly here?
-        // Double check Recharts docs if needed for `radius` prop format
-        if (parts.length === 4 && parts.every(p => !isNaN(p))) {
-          return parts; // Assuming [tl, tr, br, bl] order
-        }
-        return [4, 4, 0, 0]; // Default fallback
-      };
-
       setComputedStyles({
         gridStroke: styles.getPropertyValue('--chart-grid-color').trim() || (theme === 'dark' ? '#374151' : '#e2e8f0'),
         gridDasharray: styles.getPropertyValue('--chart-grid-stroke-dasharray').trim().replace(/"/g, '') || '3 3',

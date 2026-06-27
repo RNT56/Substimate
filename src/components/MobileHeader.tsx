@@ -24,7 +24,7 @@ export function MobileHeader({
   onToggleExpand,
   onOpenAuthModal 
 }: Props) {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { theme } = useTheme();
   const { displayCurrency } = useCurrency();
   const isBTC = displayCurrency === 'BTC';

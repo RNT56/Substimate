@@ -6,6 +6,7 @@ import { useCurrency } from '../contexts/CurrencyContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useDevice } from '../hooks/useDevice';
 import { PaydayDetailModal } from '../components/finance/PaydayDetailModal';
+import { convertSubscriptionMonthlyAmount, convertSubscriptionPaymentAmount } from '../lib/subscriptionCosts';
 
 interface PaymentEvent {
   name: string;
@@ -23,7 +24,7 @@ interface SelectedPaydayData {
 export function PaydayCalendarPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const { subscriptions } = useSubscriptions();
-  const { displayCurrency, formatAmount } = useCurrency();
+  const { displayCurrency, convertAmount, formatAmount } = useCurrency();
   const { theme } = useTheme();
   const { isMobile } = useDevice();
   const isDark = theme === 'dark';
@@ -41,15 +42,17 @@ export function PaydayCalendarPage() {
   const paymentEvents = React.useMemo(() => {
     const events = new Map<string, PaymentEvent[]>();
     const today = new Date();
+    const paymentMonthStart = startOfMonth(currentMonth);
+    const paymentMonthEnd = endOfMonth(currentMonth);
 
     subscriptions.forEach(sub => {
       const startDate = parseISO(sub.startDate);
       
       // Only add events if the subscription has started
-      if (startDate > monthEnd) return;
+      if (startDate > paymentMonthEnd) return;
       
-      const monthlyAmount = sub.monthlyCost || 0;
-      const yearlyAmount = monthlyAmount * 12;
+      const monthlyAmount = convertSubscriptionMonthlyAmount(sub, displayCurrency, convertAmount);
+      const paymentAmount = convertSubscriptionPaymentAmount(sub, displayCurrency, convertAmount);
 
       if (sub.billingPeriod === 'yearly') {
         // For yearly subscriptions, add payment on the anniversary
@@ -57,7 +60,7 @@ export function PaydayCalendarPage() {
         paymentDate.setFullYear(currentMonth.getFullYear());
         
         // If the payment date is in this month
-        if (paymentDate >= monthStart && paymentDate <= monthEnd) {
+        if (paymentDate >= paymentMonthStart && paymentDate <= paymentMonthEnd) {
           const dateKey = format(paymentDate, 'yyyy-MM-dd');
           const type = paymentDate > today ? 'upcoming' : 'past';
           
@@ -66,7 +69,7 @@ export function PaydayCalendarPage() {
           }
           events.get(dateKey)?.push({
             name: sub.name,
-            amount: yearlyAmount,
+            amount: paymentAmount,
             date: paymentDate,
             type,
             billingPeriod: 'yearly'
@@ -77,7 +80,7 @@ export function PaydayCalendarPage() {
         const paymentDate = new Date(currentMonth);
         paymentDate.setDate(startDate.getDate());
         
-        if (paymentDate >= monthStart && paymentDate <= monthEnd) {
+        if (paymentDate >= paymentMonthStart && paymentDate <= paymentMonthEnd) {
           const dateKey = format(paymentDate, 'yyyy-MM-dd');
           const type = paymentDate > today ? 'upcoming' : 'past';
           
@@ -96,7 +99,7 @@ export function PaydayCalendarPage() {
     });
 
     return events;
-  }, [subscriptions, currentMonth]);
+  }, [subscriptions, currentMonth, displayCurrency, convertAmount]);
 
   const handlePreviousMonth = () => {
     setCurrentMonth(prev => subMonths(prev, 1));

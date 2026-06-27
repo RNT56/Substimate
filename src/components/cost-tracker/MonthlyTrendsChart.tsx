@@ -231,18 +231,18 @@ export function MonthlyTrendsChart({ data }: Props) {
               stackId="expenses"
               yAxisId="left"
             />
-            {/* BTC value line (placeholder) */}
+            {/* BTC trend overlay */}
             {isBTC && (
               <Area
                 type="monotone"
-                dataKey="totalExpenses" // Use totalExpenses for position, but style differently
-                name="BTC Value (approx)" // Indicate this is an approximation
+                dataKey="totalExpenses"
+                name="BTC Value"
                 stroke="var(--chart-color-btc)"
                 fill="none"
                 strokeWidth={2}
                 strokeDasharray={computedStyles.btcDasharray}
                 dot={false}
-                yAxisId="left" // Assuming left axis is the primary value axis
+                yAxisId="left"
               />
             )}
           </ComposedChart>

@@ -19,6 +19,7 @@ CREATE OR REPLACE FUNCTION batch_update_subscription_order(updates jsonb)
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   subscription_record record;

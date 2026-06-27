@@ -1,5 +1,4 @@
 import { useCurrency } from '../../contexts/CurrencyContext';
-import { useTheme } from '../../contexts/ThemeContext';
 import { TooltipBreakdown } from './TooltipBreakdown';
 import { format, parseISO } from 'date-fns';
 import type { Link } from './types';
@@ -13,9 +12,7 @@ interface FlowTooltipProps {
 }
 
 export function FlowTooltip({ link, mouseX, mouseY, onClose }: FlowTooltipProps) {
-  const { displayCurrency, formatAmount, convertAmount } = useCurrency();
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const { displayCurrency, formatAmount } = useCurrency();
   const isBTC = displayCurrency === 'BTC';
 
   const sourceNode = link.sourceNode;
@@ -34,7 +31,7 @@ export function FlowTooltip({ link, mouseX, mouseY, onClose }: FlowTooltipProps)
   const extractMonetaryValue = (value: string | number | undefined): number => {
     if (typeof value === 'undefined') return 0;
     if (typeof value === 'number') return value;
-    
+
     // If it's a string, try to extract numeric value
     if (typeof value === 'string') {
       // Check if the string is already a formatted amount with comma as decimal separator (European format)
@@ -50,30 +47,24 @@ export function FlowTooltip({ link, mouseX, mouseY, onClose }: FlowTooltipProps)
         return parseFloat(numericString);
       }
     }
-    
+
     return 0;
   };
 
   // Format amount with proper currency conversion and period
   const formatWithPeriod = (amount: number, period: string) => {
-    // First convert the amount from EUR to the display currency
-    const convertedAmount = convertAmount(amount, 'EUR', displayCurrency);
-    
-    // Special case for BTC to format in satoshis
     if (displayCurrency === 'BTC') {
-      // Calculate satoshi value (1 BTC = 100,000,000 satoshis)
-      const satoshis = Math.round(convertedAmount * SATS_PER_BTC);
+      const satoshis = Math.round(amount * SATS_PER_BTC);
       return `${new Intl.NumberFormat('en-US', {
         maximumFractionDigits: 0
       }).format(satoshis)} sats/${period}`;
     }
-    
-    // For non-BTC currencies, use the formatAmount function
+
     return `${formatAmount(amount, displayCurrency)}/${period}`;
   };
 
   return (
-    <div 
+    <div
       className="fixed z-50 w-96 themed-tooltip"
       style={{
         left: `${mouseX + 16}px`,
@@ -86,7 +77,7 @@ export function FlowTooltip({ link, mouseX, mouseY, onClose }: FlowTooltipProps)
         <h3 className="font-medium text-theme-primary">
           {targetNode.name.replace('Fixed: ', '').replace('Variable: ', '').replace('Sub: ', '')}
         </h3>
-        <button 
+        <button
           onClick={onClose}
           className="text-theme-secondary hover:text-theme-primary transition-colors"
         >
@@ -98,8 +89,8 @@ export function FlowTooltip({ link, mouseX, mouseY, onClose }: FlowTooltipProps)
         <div className="flex justify-between text-sm">
           <span className="text-theme-secondary">Total Flow:</span>
           <span className={isBTC ? 'text-[#f7931a]' : 'text-emerald-400'}>
-            {isBTC 
-              ? `${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(convertAmount(totalAmount, 'EUR', 'BTC') * SATS_PER_BTC))} sats` 
+            {isBTC
+              ? `${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(totalAmount * SATS_PER_BTC))} sats`
               : formatAmount(totalAmount, displayCurrency)}
           </span>
         </div>
@@ -112,7 +103,7 @@ export function FlowTooltip({ link, mouseX, mouseY, onClose }: FlowTooltipProps)
                 const billingPeriod = service.details['Billing Period']?.toLowerCase();
                 const startDate = service.details['Start Date'];
                 const isYearly = billingPeriod === 'yearly';
-                
+
                 // Get monthly amount directly from Monthly Cost if available
                 let monthlyAmount = 0;
                 if (typeof service.amount === 'number') {
@@ -123,13 +114,13 @@ export function FlowTooltip({ link, mouseX, mouseY, onClose }: FlowTooltipProps)
                   // Extract from formatted Monthly Cost string
                   monthlyAmount = extractMonetaryValue(service.details['Monthly Cost']);
                 }
-                
+
                 // Calculate yearly amount from monthly
                 const yearlyAmount = monthlyAmount * 12;
 
                 return (
-                  <div 
-                    key={i} 
+                  <div
+                    key={i}
                     className="text-sm p-4 rounded-lg themed-card"
                   >
                     <div className="flex flex-col gap-1 mb-3">
@@ -162,7 +153,7 @@ export function FlowTooltip({ link, mouseX, mouseY, onClose }: FlowTooltipProps)
                             const [label, amount] = item.split(': ');
                             return { label, value: amount };
                           });
-                          
+
                           return (
                             <TooltipBreakdown
                               key={key}

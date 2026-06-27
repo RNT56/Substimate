@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, PlusCircle, CreditCard, Calculator, BarChart2, Settings, Upload, Wallet, Calendar, Bitcoin } from 'lucide-react';
+import { LogOut, PlusCircle, CreditCard, BarChart2, Settings, Upload, Wallet, Calendar, Bitcoin } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useCurrency } from '../contexts/CurrencyContext';
@@ -9,7 +9,6 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onAddSubscription: () => void;
-  onSearch: (query: string) => void;
   totalMonthlyCost: string;
 }
 
@@ -26,7 +25,7 @@ const bottomNavItems = [
   { icon: Upload, label: 'Import Data', href: '/import' }
 ];
 
-export function MobileMenu({ isOpen, onClose, onAddSubscription, onSearch, totalMonthlyCost }: Props) {
+export function MobileMenu({ isOpen, onClose, onAddSubscription, totalMonthlyCost }: Props) {
   const { signOut } = useAuth();
   const { theme } = useTheme();
   const { displayCurrency } = useCurrency();

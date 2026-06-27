@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, memo, useEffect } from 'react';
+import React, { useState, useCallback, memo, useEffect } from 'react';
 import {
   // Media & Entertainment
   Music, Video, Tv, Film, Headphones, Radio, Mic, Camera, Image, Play,
@@ -49,6 +49,7 @@ import { EditSubscriptionModal } from './EditSubscriptionModal';
 import { IconSelector } from './IconSelector';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { useSubscriptions } from '../contexts/SubscriptionContext';
+import { convertSubscriptionMonthlyAmount } from '../lib/subscriptionCosts';
 
 // Define UsageState type
 type UsageState = 'active' | 'not much' | 'unused';
@@ -156,7 +157,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({ subscription, o
   }, [subscription, onUpdate]);
 
   // Use a fallback for potentially undefined monthlyCost
-  const convertedMonthlyCost = convertAmount(subscription.monthlyCost || 0, 'EUR', displayCurrency);
+  const convertedMonthlyCost = convertSubscriptionMonthlyAmount(subscription, displayCurrency, convertAmount);
   const formattedCost = formatAmount(convertedMonthlyCost, displayCurrency);
 
 

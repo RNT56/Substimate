@@ -3,12 +3,13 @@ import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { TimeframeSelector, type Timeframe } from './TimeframeSelector';
-import { isWithinInterval, parseISO, endOfMonth, startOfMonth, addMonths, isAfter, isBefore, eachMonthOfInterval, format } from 'date-fns';
+import { isWithinInterval, parseISO, endOfMonth, startOfMonth, isAfter, eachMonthOfInterval, format } from 'date-fns';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { FlowTooltip } from './FlowTooltip';
 import type { Props, Node, Link, PriceHistory } from './types';
 import { SATS_PER_BTC } from '../../lib/constants';
+import { normalizeCurrency } from '../../lib/subscriptionCosts';
 
 // Helper function to get computed style property
 const getCssVariable = (variable: string, fallback: string = '#888') => {
@@ -35,7 +36,7 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
   const colorMapping = useMemo(() => {
     const incomeColor = getCssVariable(isBTC ? '--chart-color-btc' : '--chart-color-1', '#10B981');
     const defaultTextColor = getCssVariable('--chart-text-color', '#333'); // Use a dark fallback for light mode
-    
+
     return {
       income: incomeColor,
       savings: getCssVariable('--chart-color-2', '#F59E0B'),
@@ -44,11 +45,11 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
       subscription: getCssVariable('--chart-color-4', '#8B5CF6'),
       default: defaultTextColor, // Use resolved default text color
       // Explicitly set text color based on dark mode
-      text: isDark ? '#FFFFFF' : defaultTextColor, 
+      text: isDark ? '#FFFFFF' : defaultTextColor,
       tooltipBg: getCssVariable('--chart-tooltip-bg', isDark ? '#1F2937' : '#F9FAFB') // Dark/Light fallback for tooltip
     };
-  // Rerun when theme or currency potentially affecting BTC color changes
-  }, [theme, isDark, isBTC]); // Add isDark dependency
+  // Rerun when theme darkness or currency potentially affecting BTC color changes
+  }, [isDark, isBTC]);
 
   useEffect(() => {
     const fetchPriceHistory = async () => {
@@ -70,6 +71,7 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
           acc[entry.subscription_id].push({
             subscription_id: entry.subscription_id,
             monthly_cost: entry.monthly_cost,
+            currency: entry.currency,
             effective_from: entry.effective_from
           });
           return acc;
@@ -104,7 +106,7 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
 
     document.addEventListener('click', handleBackgroundClick);
     document.addEventListener('keydown', handleEscapeKey);
-    
+
     return () => {
       document.removeEventListener('click', handleBackgroundClick);
       document.removeEventListener('keydown', handleEscapeKey);
@@ -156,22 +158,28 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
     }
   }, [timeframe]);
 
-  const getSubscriptionCostForMonth = (subscription: Props['subscriptions'][0], month: Date): number => {
-    const history = priceHistory[subscription.id];
-    if (!history?.length) {
-      return subscription.monthlyCost;
-    }
-
-    const applicablePrice = history
-      .filter(entry => !isAfter(parseISO(entry.effective_from), endOfMonth(month)))
-      .sort((a, b) => 
-        parseISO(b.effective_from).getTime() - parseISO(a.effective_from).getTime()
-      )[0];
-
-    return applicablePrice ? applicablePrice.monthly_cost : subscription.monthlyCost;
-  };
-
   const flowData = useMemo(() => {
+    const getSubscriptionCostForMonth = (subscription: Props['subscriptions'][0], month: Date): number => {
+      const history = priceHistory[subscription.id];
+      if (!history?.length) {
+        return convertAmount(subscription.monthlyCost, normalizeCurrency(subscription.currency), displayCurrency);
+      }
+
+      const applicablePrice = history
+        .filter(entry => !isAfter(parseISO(entry.effective_from), endOfMonth(month)))
+        .sort((a, b) =>
+          parseISO(b.effective_from).getTime() - parseISO(a.effective_from).getTime()
+        )[0];
+
+      return applicablePrice
+        ? convertAmount(
+            applicablePrice.monthly_cost,
+            normalizeCurrency(applicablePrice.currency || subscription.currency),
+            displayCurrency
+          )
+        : convertAmount(subscription.monthlyCost, normalizeCurrency(subscription.currency), displayCurrency);
+    };
+
     const periodStart = startOfMonth(selectedDate);
     const periodEnd = endOfMonth(selectedDate);
     if (timeframe === 'quarterly') {
@@ -194,7 +202,7 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
       } else if (timeframe === 'quarterly' && source.frequency === 'monthly') {
         amount *= 3;
       }
-      return sum + amount;
+      return sum + convertAmount(amount, 'EUR', displayCurrency);
     }, 0);
 
     const fixedCategories = fixedExpenses.reduce<Record<string, Array<{
@@ -204,26 +212,27 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
     }>>>((acc, expense) => {
       if (!acc[expense.category]) acc[expense.category] = [];
       let amount = expense.amount;
-      
+
       if (expense.frequency === 'yearly') {
         amount = timeframe === 'yearly' ? amount : amount / 12 * timeframeMultiplier;
       } else if (expense.frequency === 'quarterly') {
-        amount = timeframe === 'yearly' ? amount * 4 : 
-                timeframe === 'quarterly' ? amount : 
+        amount = timeframe === 'yearly' ? amount * 4 :
+                timeframe === 'quarterly' ? amount :
                 amount / 3;
       } else {
         amount *= timeframeMultiplier;
       }
+      const convertedAmount = convertAmount(amount, 'EUR', displayCurrency);
 
       acc[expense.category].push({
         name: expense.name,
-        amount,
+        amount: convertedAmount,
         details: {
           Frequency: expense.frequency.charAt(0).toUpperCase() + expense.frequency.slice(1),
-          [`${timeframe.charAt(0).toUpperCase() + timeframe.slice(1)} Amount`]: 
-            formatAmount(amount, displayCurrency),
-          'Monthly Breakdown': months.map(month => 
-            `${format(month, 'MMM yyyy')}: ${formatAmount(expense.amount, displayCurrency)}`
+          [`${timeframe.charAt(0).toUpperCase() + timeframe.slice(1)} Amount`]:
+            formatAmount(convertedAmount, displayCurrency),
+          'Monthly Breakdown': months.map(month =>
+            `${format(month, 'MMM yyyy')}: ${formatAmount(convertAmount(expense.amount, 'EUR', displayCurrency), displayCurrency)}`
           ).join('\n')
         }
       });
@@ -236,13 +245,13 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
       details: Record<string, any>;
     }>>>((acc, expense) => {
       if (!acc[expense.category]) acc[expense.category] = [];
-      const amount = expense.amount * timeframeMultiplier;
+      const amount = convertAmount(expense.amount * timeframeMultiplier, 'EUR', displayCurrency);
       acc[expense.category].push({
         name: expense.name,
         amount,
         details: {
           Date: new Date(expense.date).toLocaleDateString(),
-          [`${timeframe.charAt(0).toUpperCase() + timeframe.slice(1)} Amount`]: 
+          [`${timeframe.charAt(0).toUpperCase() + timeframe.slice(1)} Amount`]:
             formatAmount(amount, displayCurrency)
         }
       });
@@ -256,20 +265,17 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
     }>>>((acc, sub) => {
       if (!acc[sub.category]) acc[sub.category] = [];
 
-      const monthlyAmount = sub.monthlyCost;
+      const monthAmounts = months.map(month => getSubscriptionCostForMonth(sub, month));
+      const monthlyAmount = monthAmounts[0] ?? convertAmount(
+        sub.monthlyCost,
+        normalizeCurrency(sub.currency),
+        displayCurrency
+      );
       const yearlyAmount = monthlyAmount * 12;
+      const totalAmount = monthAmounts.reduce((sum, amount) => sum + amount, 0);
 
-      let totalAmount = 0;
-      if (timeframe === 'yearly') {
-        totalAmount = yearlyAmount;
-      } else if (timeframe === 'quarterly') {
-        totalAmount = monthlyAmount * 3;
-      } else {
-        totalAmount = monthlyAmount;
-      }
-
-      const monthlyAmounts = months.map(month => {
-        return `${format(month, 'MMM yyyy')}: ${formatAmount(monthlyAmount, displayCurrency)}`;
+      const monthlyAmounts = months.map((month, index) => {
+        return `${format(month, 'MMM yyyy')}: ${formatAmount(monthAmounts[index] ?? monthlyAmount, displayCurrency)}`;
       });
 
       acc[sub.category].push({
@@ -283,7 +289,7 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
           ...(sub.billingPeriod === 'yearly' && {
             'Yearly Cost': formatAmount(yearlyAmount, displayCurrency)
           }),
-          [`${timeframe.charAt(0).toUpperCase() + timeframe.slice(1)} Cost`]: 
+          [`${timeframe.charAt(0).toUpperCase() + timeframe.slice(1)} Cost`]:
             formatAmount(totalAmount, displayCurrency),
           'Monthly Breakdown': monthlyAmounts.join('\n')
         }
@@ -326,7 +332,7 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
     ].reduce((sum, service) => sum + service.amount, 0);
 
     const savings = Math.max(0, totalIncome - totalExpenses);
-    
+
     nodes.push(
       ...fixedCategoryNodes,
       ...variableCategoryNodes,
@@ -384,14 +390,15 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
 
     return { nodes, links };
   }, [
-    incomeSources, 
-    fixedExpenses, 
-    variableExpenses, 
-    subscriptions, 
-    timeframe, 
-    timeframeMultiplier, 
-    displayCurrency, 
-    formatAmount, 
+    incomeSources,
+    fixedExpenses,
+    variableExpenses,
+    subscriptions,
+    timeframe,
+    timeframeMultiplier,
+    convertAmount,
+    displayCurrency,
+    formatAmount,
     selectedDate,
     priceHistory
   ]);
@@ -411,11 +418,11 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
   const getNodeColor = (node: Node) => {
     if (node.category === 'income') return colorMapping.income;
     if (node.category === 'savings') return colorMapping.savings;
-    
+
     if (node.name.startsWith('Fixed:')) return colorMapping.fixed;
     if (node.name.startsWith('Variable:')) return colorMapping.variable;
     if (node.name.startsWith('Sub:')) return colorMapping.subscription;
-    
+
     return colorMapping.default;
   };
 
@@ -437,8 +444,7 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
   // Format BTC values properly for the sankey diagram
   const formatNodeAmount = (amount: number): string => {
     if (displayCurrency === 'BTC') {
-      // Convert to satoshis for display
-      const satoshis = Math.round(convertAmount(amount, 'EUR', 'BTC') * SATS_PER_BTC);
+      const satoshis = Math.round(amount * SATS_PER_BTC);
       return `${new Intl.NumberFormat('en-US', {
         maximumFractionDigits: 0
       }).format(satoshis)} sats`;
@@ -450,7 +456,7 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
     <div className="themed-card rounded-xl p-6">
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-xl font-bold text-theme-primary">Spending Flow</h2>
-        <TimeframeSelector 
+        <TimeframeSelector
           timeframe={timeframe}
           selectedDate={selectedDate}
           onTimeframeChange={setTimeframe}
@@ -463,7 +469,7 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
           <svg width="100%" height="600" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1200 600">
             <g transform="translate(40,20)">
               {sankeyData.links?.map((link, i) => (
-                <g 
+                <g
                   key={link.id || i}
                   fill="none"
                   className="flow-path"
@@ -478,7 +484,7 @@ export function SpendingFlowChart({ incomeSources, fixedExpenses, variableExpens
                     stroke={getLinkColor(link)}
                     strokeWidth={Math.max(1, link.width as number)}
                     opacity={
-                      (activeLink || hoveredLink) 
+                      (activeLink || hoveredLink)
                         ? (activeLink?.id === link.id || hoveredLink?.id === link.id ? 1 : 0.3)
                         : 0.8
                     }

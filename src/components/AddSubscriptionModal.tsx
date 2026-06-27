@@ -1,15 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, MessageSquare, Image, Search, Tv, Music, Video, Code, ShoppingBag, Plus, Calendar, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import type { Subscription, PaymentMethod, BillingPeriod } from '../types';
 import { predictSubscription, getSubscriptionCategory } from '../utils/subscriptionPredictions';
-import { useCurrency } from '../contexts/CurrencyContext';
 import { useDevice } from '../hooks/useDevice';
 import type { Currency } from '../types';
-import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { supabase } from '../lib/supabase';
-import { DEFAULT_CATEGORIES } from '../lib/constants';
 import { DatePicker } from './DatePicker';
+import { SUPPORTED_CURRENCIES } from '../lib/subscriptionCosts';
 
 const PAYMENT_METHODS: PaymentMethod[] = [
   'credit_card',
@@ -66,12 +63,10 @@ const SUGGESTIONS = [
   'v0.dev'
 ];
 
-const CURRENCIES: Currency[] = ['EUR', 'USD', 'BTC'];
-
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (subscription: Subscription) => void;
+  onAdd: (subscription: Omit<Subscription, 'id'>) => Promise<void> | void;
 }
 
 export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
@@ -94,7 +89,6 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const paymentMethodRef = useRef<HTMLDivElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
-  const { convertAmount } = useCurrency();
   const { submitting } = useToast();
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -208,21 +202,21 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
       formattedUrl = `https://${url}`;
     }
     
-    // Calculate monthly cost based on billing period
     const inputAmount = parseFloat(monthlyCost);
+    if (!Number.isFinite(inputAmount) || inputAmount < 0) {
+      return;
+    }
+
     const calculatedMonthlyCost = billingPeriod === 'yearly' 
-      ? inputAmount / 12  // Store monthly equivalent for yearly subscriptions
-      : inputAmount;      // Store as-is for monthly subscriptions
+      ? inputAmount / 12
+      : inputAmount;
     
-    // Convert to EUR for storage
-    const costInEUR = convertAmount(calculatedMonthlyCost, currency, 'EUR');
-    
-    onAdd({
-      id: crypto.randomUUID(),
+    await onAdd({
       name,
       url: formattedUrl,
       icon,
-      monthlyCost: costInEUR,
+      monthlyCost: calculatedMonthlyCost,
+      amount: calculatedMonthlyCost,
       currency,
       billingPeriod,
       paymentMethod: paymentMethod as PaymentMethod,
@@ -333,7 +327,7 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
                     onChange={(e) => setCurrency(e.target.value as Currency)}
                     className="w-full themed-input rounded-lg px-4 py-3 text-theme-primary focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   >
-                    {CURRENCIES.map(curr => (
+                    {SUPPORTED_CURRENCIES.map(curr => (
                       <option key={curr} value={curr}>{curr}</option>
                     ))}
                   </select>

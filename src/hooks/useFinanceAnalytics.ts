@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { format, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from 'date-fns';
 import { useCurrency } from '../contexts/CurrencyContext';
 import type { FixedExpense, VariableExpense, Income, AssetTransaction, Subscription } from '../types';
+import { convertSubscriptionMonthlyAmount } from '../lib/subscriptionCosts';
 
 export function useFinanceAnalytics(
   fixedExpenses: FixedExpense[],
@@ -43,7 +44,7 @@ export function useFinanceAnalytics(
           const startDate = parseISO(sub.startDate);
           return startDate <= monthEnd;
         })
-        .reduce((sum, sub) => sum + sub.monthlyCost, 0);
+        .reduce((sum, sub) => sum + convertSubscriptionMonthlyAmount(sub, 'EUR', convertAmount), 0);
 
       // Calculate income for this month
       const monthlyIncome = incomeSources.reduce((sum, income) => {
