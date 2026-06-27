@@ -158,12 +158,10 @@ Authentication is handled by Supabase Auth:
 
 1. Clone the repository
 2. Install dependencies with `npm install`
-3. Create a `.env` file with the required environment variables:
+3. Copy `.env.example` to `.env` and set the required Supabase public project values:
    ```
    VITE_SUPABASE_URL=<your-supabase-url>
    VITE_SUPABASE_ANON_KEY=<your-supabase-anon-key>
-   VITE_COINGECKO_API_KEY=<your-coingecko-api-key>
-   VITE_EXCHANGE_RATE_API_KEY=<your-exchange-rate-api-key>
    ```
 4. Run the development server with `npm run dev`
 5. Build for production with `npm run build`
@@ -630,4 +628,4 @@ Potential future features and improvements could include:
        setSubmitting(false);
      }
    };
-   ``` 
+   ```

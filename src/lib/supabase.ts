@@ -5,9 +5,7 @@ import type { Database } from './database.types';
 const getEnvVars = () => {
   const requiredVars = {
     VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
-    VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
-    VITE_COINGECKO_API_KEY: import.meta.env.VITE_COINGECKO_API_KEY,
-    VITE_EXCHANGE_RATE_API_KEY: import.meta.env.VITE_EXCHANGE_RATE_API_KEY
+    VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY
   };
 
   const missingVars = Object.entries(requiredVars)
@@ -25,10 +23,6 @@ const getEnvVars = () => {
     supabase: {
       url: requiredVars.VITE_SUPABASE_URL,
       anonKey: requiredVars.VITE_SUPABASE_ANON_KEY
-    },
-    api: {
-      coingecko: requiredVars.VITE_COINGECKO_API_KEY,
-      exchangeRate: requiredVars.VITE_EXCHANGE_RATE_API_KEY
     }
   };
 };
@@ -62,9 +56,3 @@ supabase.auth.onAuthStateChange((event, session) => {
     localStorage.removeItem('dashboard_layout');
   }
 });
-
-// Export API keys
-export const apiKeys = {
-  coingecko: env.api.coingecko,
-  exchangeRate: env.api.exchangeRate
-};

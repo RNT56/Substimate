@@ -3,6 +3,7 @@ import type { Currency, CurrencyPreference } from '../types';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { SATS_PER_BTC } from '../lib/constants';
+import { fetchBitcoinPrices, fetchEurUsdRate } from '../lib/marketData';
 
 interface CurrencyContextType {
   displayCurrency: Currency;
@@ -85,19 +86,11 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // Fetch BTC/EUR rate from CoinGecko
-        const coingeckoResponse = await fetch(
-          `https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur&x_cg_api_key=${import.meta.env.VITE_COINGECKO_API_KEY}`
-        );
-        const coingeckoData = await coingeckoResponse.json();
-        const btcEurRate = 1 / coingeckoData.bitcoin.eur; // Convert to BTC/EUR rate
-
-        // Fetch EUR/USD rate from Exchange Rate API
-        const exchangeRateResponse = await fetch(
-          `https://v6.exchangerate-api.com/v6/${import.meta.env.VITE_EXCHANGE_RATE_API_KEY}/latest/EUR`
-        );
-        const exchangeRateData = await exchangeRateResponse.json();
-        const eurUsdRate = exchangeRateData.conversion_rates.USD;
+        const [bitcoinPrices, eurUsdRate] = await Promise.all([
+          fetchBitcoinPrices(['eur']),
+          fetchEurUsdRate()
+        ]);
+        const btcEurRate = 1 / bitcoinPrices.eur; // Convert to BTC/EUR rate
 
         const newRates = {
           EUR: 1,

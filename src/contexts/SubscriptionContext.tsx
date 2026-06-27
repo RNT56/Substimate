@@ -310,8 +310,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
       // Now delete the subscription itself - this uses a direct SQL query to avoid trigger issues
       const { error } = await supabase.rpc('delete_subscription_directly', { 
-        sub_id: id,
-        user_uuid: user.id // Use user.id directly
+        sub_id: id
       });
 
       if (error) {
@@ -525,4 +524,4 @@ export function useSubscriptions() {
     throw new Error('useSubscriptions must be used within a SubscriptionProvider');
   }
   return context;
-} 
+}

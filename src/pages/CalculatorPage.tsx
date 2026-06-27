@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calculator as CalculatorIcon, RefreshCw, Bitcoin } from 'lucide-react';
 import { useCurrency } from '../contexts/CurrencyContext';
+import { fetchBitcoinPrices } from '../lib/marketData';
 
 interface ExchangeRates {
   EUR: number;
@@ -27,18 +28,10 @@ export function CalculatorPage() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(
-        `https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur,usd&x_cg_api_key=${import.meta.env.VITE_COINGECKO_API_KEY}`
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch exchange rates');
-      }
-
-      const data = await response.json();
+      const data = await fetchBitcoinPrices(['eur', 'usd']);
       setExchangeRates({
-        EUR: data.bitcoin.eur,
-        USD: data.bitcoin.usd
+        EUR: data.eur,
+        USD: data.usd
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch exchange rates');

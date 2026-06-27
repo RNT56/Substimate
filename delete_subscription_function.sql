@@ -1,13 +1,16 @@
 -- Function to directly delete a subscription without using triggers
 -- This avoids the user_categories errors
-CREATE OR REPLACE FUNCTION delete_subscription_directly(sub_id UUID, user_uuid UUID)
+DROP FUNCTION IF EXISTS delete_subscription_directly(UUID, UUID);
+
+CREATE OR REPLACE FUNCTION delete_subscription_directly(sub_id UUID)
 RETURNS void AS $$
 BEGIN
-  -- Delete the subscription directly using SQL to bypass RLS and triggers
+  -- Use auth.uid() inside the SECURITY DEFINER function. Never trust caller-supplied user ids.
   DELETE FROM subscriptions 
-  WHERE id = sub_id AND user_id = user_uuid;
+  WHERE id = sub_id AND user_id = auth.uid();
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Grant execute permissions to authenticated users
-GRANT EXECUTE ON FUNCTION delete_subscription_directly TO authenticated;
+REVOKE ALL ON FUNCTION delete_subscription_directly(UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION delete_subscription_directly(UUID) TO authenticated;

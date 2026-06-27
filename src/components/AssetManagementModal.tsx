@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import type { FinancialAsset } from '../types';
 import { useCurrency } from '../contexts/CurrencyContext';
+import { fetchBitcoinPrices } from '../lib/marketData';
 
 interface Props {
   isOpen: boolean;
@@ -52,11 +53,8 @@ export function AssetManagementModal({ isOpen, onClose, onAdd, onUpdate, asset }
     const fetchBTCPrice = async () => {
       if (type === 'crypto' && name.toLowerCase().includes('bitcoin')) {
         try {
-          const response = await fetch(
-            `https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur&x_cg_api_key=${import.meta.env.VITE_COINGECKO_API_KEY}`
-          );
-          const data = await response.json();
-          const currentPrice = data.bitcoin.eur;
+          const data = await fetchBitcoinPrices(['eur']);
+          const currentPrice = data.eur;
           
           // If we're adding a new asset, set the purchase price to current price
           if (!asset && !purchasePrice) {
