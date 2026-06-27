@@ -12,7 +12,7 @@ import {
   
   // Business & Productivity
   FileText, Folder, Calendar, Clock, Briefcase, BarChart2, PieChart, LineChart,
-  Trello, Kanban, CheckSquare, ListTodo,
+  Columns3 as Trello, Kanban, CheckSquare, ListTodo,
   
   // Shopping & Finance
   ShoppingBag, ShoppingCart, CreditCard, Wallet, DollarSign, Receipt, Tag, Package,

@@ -6,7 +6,7 @@
   <p><strong>A private-first finance workspace for subscriptions, spending, assets, income, and currency-aware planning.</strong></p>
 
   <p>
-    <a href="https://react.dev/"><img alt="React 18" src="https://img.shields.io/badge/React-18-20232a?style=flat-square&logo=react&logoColor=61dafb" /></a>
+    <a href="https://react.dev/"><img alt="React 19" src="https://img.shields.io/badge/React-19-20232a?style=flat-square&logo=react&logoColor=61dafb" /></a>
     <a href="https://www.typescriptlang.org/"><img alt="TypeScript 6" src="https://img.shields.io/badge/TypeScript-6-3178c6?style=flat-square&logo=typescript&logoColor=white" /></a>
     <a href="https://vite.dev/"><img alt="Vite 8" src="https://img.shields.io/badge/Vite-8-646cff?style=flat-square&logo=vite&logoColor=white" /></a>
     <a href="https://supabase.com/"><img alt="Supabase Postgres" src="https://img.shields.io/badge/Supabase-Postgres-3fcf8e?style=flat-square&logo=supabase&logoColor=white" /></a>
@@ -48,11 +48,11 @@ The project is built as a client application backed by Supabase Auth, Postgres, 
 
 | Layer | Tools |
 | --- | --- |
-| Application | React 18, TypeScript, React Router |
-| Build | Vite, Tailwind CSS, PostCSS |
+| Application | React 19, TypeScript 6, React Router 7 |
+| Build | Vite 8, Tailwind CSS 3, PostCSS |
 | Data | Supabase, PostgreSQL, Row Level Security |
 | Auth | Supabase Auth |
-| Charts | Recharts, D3 Sankey |
+| Charts | Recharts 3, D3 Sankey |
 | Interaction | DnD Kit, Lucide React |
 | Quality | ESLint, npm audit, Vite production build |
 
@@ -76,8 +76,8 @@ supabase/
 
 ### Requirements
 
-- Node.js 20 or newer
-- npm 10 or newer
+- Node.js 22.13 or newer
+- npm 11 or newer
 - A Supabase project
 - Supabase CLI if you want to apply the migrations locally or to a hosted project
 
@@ -162,6 +162,7 @@ The public branch is intentionally minimal:
 - Add export workflows for recurring costs and finance records.
 - Expand reporting for long-term cash flow and savings scenarios.
 - Add optional backend or edge functions for provider integrations that require private keys.
+- Plan the Tailwind CSS 4 migration as a dedicated visual-system pass.
 - Add focused test coverage around import parsing, currency conversion, and Supabase data transforms.
 
 ## License

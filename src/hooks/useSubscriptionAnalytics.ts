@@ -18,7 +18,6 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   convertSubscriptionMonthlyAmount,
   convertSubscriptionPaymentAmount,
-  getSubscriptionMonthlyAmount,
   normalizeCurrency
 } from '../lib/subscriptionCosts';
 
@@ -75,10 +74,6 @@ export function useSubscriptionAnalytics(subscriptions: Subscription[]) {
             const hasPassedLastAnniversary = isAfter(currentDate, lastAnniversaryDate);
             completedPayments = hasPassedLastAnniversary ? yearsActive + 1 : yearsActive;
           }
-
-          // Get the yearly cost (monthly_cost is already stored as monthly equivalent)
-          const yearlyCost = getSubscriptionMonthlyAmount(sub) * 12;
-          totalSpent = yearlyCost;
 
           // Handle price history if it exists
           if (history.length) {

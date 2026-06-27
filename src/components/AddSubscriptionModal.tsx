@@ -176,7 +176,7 @@ export function AddSubscriptionModal({ isOpen, onClose, onAdd }: Props) {
   useEffect(() => {
     if (!isMobile) return;
 
-    const adjustScroll = (ref: React.RefObject<HTMLDivElement>, show: boolean) => {
+    const adjustScroll = (ref: React.RefObject<HTMLDivElement | null>, show: boolean) => {
       if (show && ref.current) {
         const rect = ref.current.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
