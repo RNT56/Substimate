@@ -117,27 +117,35 @@
 
 @layer components {
   /* --- Refactored Generic Themed Components --- */
-  .themed-button {
+  .themed-button,
+  .neumorphic-button {
     /* Base layout and transition for hover effects */
     @apply p-2 rounded-lg transition-opacity duration-200; /* Only transition opacity or specific hover props */
-    /* Visuals moved to theme-specific rules */
+    background: var(--button-bg);
+    border: var(--button-border);
+    box-shadow: var(--button-shadow);
+    backdrop-filter: var(--backdrop-filter);
   }
-  .themed-button:hover {
+  .themed-button:hover,
+  .neumorphic-button:hover {
      opacity: 0.9; /* Simple example hover effect */
   }
 
-  .themed-card {
+  .themed-card,
+  .neumorphic-card {
      @apply p-4 rounded-lg transition-all;
      background: var(--card-bg);
      border: var(--card-border);
      box-shadow: var(--card-shadow);
      backdrop-filter: var(--backdrop-filter); /* Apply here if cards need it */
     }
-   .themed-card:hover {
+   .themed-card:hover,
+   .neumorphic-card:hover {
      background: var(--card-hover, var(--card-bg)); /* Use hover var if defined */
    }
 
-  .themed-input {
+  .themed-input,
+  .neumorphic-input {
      @apply p-2 rounded-lg w-full;
      background: var(--input-bg);
      border: var(--input-border);
@@ -145,7 +153,8 @@
      color: var(--text-primary); /* Ensure text color is correct */
      backdrop-filter: var(--backdrop-filter); /* Apply here if inputs need it */
   }
-   .themed-input::placeholder {
+   .themed-input::placeholder,
+   .neumorphic-input::placeholder {
      color: var(--text-tertiary);
     }
 
