@@ -7,8 +7,8 @@ Substimate is a comprehensive financial management application focused on helpin
 ## Tech Stack
 
 - **Frontend Framework**: React with TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
+- **Build Tool**: Vite 8
+- **Styling**: Tailwind CSS 4 through the Vite plugin
 - **Backend/Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth
 - **Routing**: React Router
@@ -32,8 +32,7 @@ Substimate is a comprehensive financial management application focused on helpin
 ├── supabase/           # Supabase configuration
 │   └── migrations/     # Database migration files
 ├── public/             # Static assets
-├── vite.config.ts      # Vite configuration
-├── tailwind.config.js  # Tailwind CSS configuration
+├── vite.config.ts      # Vite and Tailwind CSS plugin configuration
 ├── tsconfig.json       # TypeScript configuration
 └── package.json        # Project dependencies and scripts
 ```
@@ -169,21 +168,21 @@ Authentication is handled by Supabase Auth:
 ## Key Dependencies
 
 ### Production Dependencies
-- React and React DOM (v18.3.1)
-- React Router DOM (v6.22.3)
-- Supabase Auth UI and JS client (v2.39.7)
-- DND Kit for drag and drop (v6.1.0)
-- Recharts for charts (v2.12.2)
+- React and React DOM (v19.2.x)
+- React Router DOM (v7.18.x)
+- Supabase JS client (v2.108.x)
+- DND Kit for drag and drop (core v6.3.x, sortable v10.0.x)
+- Recharts for charts (v3.9.x)
 - D3-Sankey for flow diagrams (v0.12.3)
-- Date-fns for date manipulation (v3.3.1)
-- Lucide React for icons (v0.344.0)
+- Date-fns for date manipulation (v4.4.x)
+- Lucide React for icons (v1.21.x)
 
 ### Development Dependencies
-- TypeScript (v5.5.3)
-- Vite (v5.4.2)
-- ESLint (v9.9.1)
-- Tailwind CSS (v3.4.1)
-- PostCSS and Autoprefixer
+- TypeScript (v6.0.x)
+- Vite (v8.1.x)
+- ESLint (v10.6.x)
+- Tailwind CSS (v4.3.x)
+- @tailwindcss/vite (v4.3.x)
 
 ## Responsive Design
 

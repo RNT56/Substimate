@@ -94,57 +94,38 @@ The core strategy is to define a set of CSS variables for chart-related styles w
     ```
     *   **Action:** Repeat this process for `glassmorphism.css`, `neumorphism.css`, `aurora.css`, etc., choosing colors that fit each theme's aesthetic. You can reuse existing theme colors (like `--text-primary`) where appropriate.
 
-**Step 2: Update Tailwind Configuration (Optional but Recommended)**
+**Step 2: Register Tailwind Theme Tokens**
 
-To easily apply these theme colors to the custom elements in `UsageStatistics.tsx` and potentially tooltips, extend your Tailwind config.
+Tailwind CSS 4 uses CSS-first configuration. To apply chart colors to custom elements in `UsageStatistics.tsx` and tooltips, register the semantic chart colors in `src/index.css` with `@theme inline`.
 
-1.  **Edit `tailwind.config.js`:** Add the chart CSS variables to your `theme.extend.colors`.
+1.  **Edit `src/index.css`:** Add the chart CSS variables to the existing `@theme inline` block.
 
-    ```javascript
-    // tailwind.config.js
-    module.exports = {
-      // ... other config like content, darkMode, plugins ...
-      theme: {
-        extend: {
-          colors: {
-            // Your existing custom colors...
-            'theme-primary': 'var(--text-primary)',
-            'theme-secondary': 'var(--text-secondary)',
-            // ... etc
+    ```css
+    @import "tailwindcss";
 
-            // Add Chart Colors
-            'chart-1': 'var(--chart-color-1)',
-            'chart-2': 'var(--chart-color-2)',
-            'chart-3': 'var(--chart-color-3)',
-            'chart-4': 'var(--chart-color-4)',
-            'chart-5': 'var(--chart-color-5)',
-            'chart-6': 'var(--chart-color-6)',
-            'chart-7': 'var(--chart-color-7)',
-            'chart-btc': 'var(--chart-color-btc)',
-            'chart-grid': 'var(--chart-grid-color)',
-            'chart-axis': 'var(--chart-axis-color)',
-            'chart-text': 'var(--chart-text-color)',
-            'chart-tooltip-bg': 'var(--chart-tooltip-bg)',
-            'chart-tooltip-text': 'var(--chart-tooltip-text)',
-            'chart-positive': 'var(--chart-positive-color)',
-            'chart-negative': 'var(--chart-negative-color)',
-            'chart-warning': 'var(--chart-warning-color)',
-            'chart-highlight': 'var(--chart-highlight-color)',
-          },
-          // Optional: If you need explicit fill/stroke utilities
-          fill: theme => ({
-            ...theme('colors'), // Include existing colors if needed
-            // e.g., fill-chart-1, fill-chart-positive
-          }),
-          stroke: theme => ({
-             ...theme('colors'), // Include existing colors if needed
-             // e.g., stroke-chart-1, stroke-chart-grid
-          }),
-        },
-      },
-    };
+    @theme inline {
+      --color-theme-primary: var(--text-primary);
+      --color-theme-secondary: var(--text-secondary);
+      --color-chart-1: var(--chart-color-1);
+      --color-chart-2: var(--chart-color-2);
+      --color-chart-3: var(--chart-color-3);
+      --color-chart-4: var(--chart-color-4);
+      --color-chart-5: var(--chart-color-5);
+      --color-chart-6: var(--chart-color-6);
+      --color-chart-7: var(--chart-color-7);
+      --color-chart-btc: var(--chart-color-btc);
+      --color-chart-grid: var(--chart-grid-color);
+      --color-chart-axis: var(--chart-axis-color);
+      --color-chart-text: var(--chart-text-color);
+      --color-chart-tooltip-bg: var(--chart-tooltip-bg);
+      --color-chart-tooltip-text: var(--chart-tooltip-text);
+      --color-chart-positive: var(--chart-positive-color);
+      --color-chart-negative: var(--chart-negative-color);
+      --color-chart-warning: var(--chart-warning-color);
+      --color-chart-highlight: var(--chart-highlight-color);
+    }
     ```
-    *   **Note:** You might need to restart your development server after changing the Tailwind config.
+    *   **Note:** The app uses `@tailwindcss/vite`, so there is no project-level `tailwind.config.js` or Tailwind PostCSS plugin to update.
 
 **Step 3: Refactor Recharts Components**
 

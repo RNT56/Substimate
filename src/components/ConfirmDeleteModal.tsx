@@ -24,7 +24,7 @@ export function ConfirmDeleteModal() {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 transition-opacity duration-300 ease-in-out">
+    <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 p-4 transition-opacity duration-300 ease-in-out">
       <div className="themed-modal p-6 rounded-xl shadow-lg w-full max-w-md">
         <h3 className="text-lg font-semibold text-theme-primary mb-4">Confirm Deletion</h3>
         <p className="text-theme-secondary mb-6">
@@ -56,4 +56,4 @@ export function ConfirmDeleteModal() {
       </div>
     </div>
   );
-} 
+}

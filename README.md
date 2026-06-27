@@ -9,6 +9,7 @@
     <a href="https://react.dev/"><img alt="React 19" src="https://img.shields.io/badge/React-19-20232a?style=flat-square&logo=react&logoColor=61dafb" /></a>
     <a href="https://www.typescriptlang.org/"><img alt="TypeScript 6" src="https://img.shields.io/badge/TypeScript-6-3178c6?style=flat-square&logo=typescript&logoColor=white" /></a>
     <a href="https://vite.dev/"><img alt="Vite 8" src="https://img.shields.io/badge/Vite-8-646cff?style=flat-square&logo=vite&logoColor=white" /></a>
+    <a href="https://tailwindcss.com/"><img alt="Tailwind CSS 4" src="https://img.shields.io/badge/Tailwind%20CSS-4-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white" /></a>
     <a href="https://supabase.com/"><img alt="Supabase Postgres" src="https://img.shields.io/badge/Supabase-Postgres-3fcf8e?style=flat-square&logo=supabase&logoColor=white" /></a>
   </p>
 </div>
@@ -49,7 +50,7 @@ The project is built as a client application backed by Supabase Auth, Postgres, 
 | Layer | Tools |
 | --- | --- |
 | Application | React 19, TypeScript 6, React Router 7 |
-| Build | Vite 8, Tailwind CSS 3, PostCSS |
+| Build | Vite 8, Tailwind CSS 4 |
 | Data | Supabase, PostgreSQL, Row Level Security |
 | Auth | Supabase Auth |
 | Charts | Recharts 3, D3 Sankey |
@@ -162,7 +163,6 @@ The public branch is intentionally minimal:
 - Add export workflows for recurring costs and finance records.
 - Expand reporting for long-term cash flow and savings scenarios.
 - Add optional backend or edge functions for provider integrations that require private keys.
-- Plan the Tailwind CSS 4 migration as a dedicated visual-system pass.
 - Add focused test coverage around import parsing, currency conversion, and Supabase data transforms.
 
 ## License

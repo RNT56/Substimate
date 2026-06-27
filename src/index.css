@@ -1,9 +1,8 @@
-@layer base, components, utilities; /* Define layer order FIRST */
-
+@import "tailwindcss";
 @import './styles/neumorphism.css';
 @import './styles/glassmorphism.css';
 @import './styles/base.css';
-@import './styles/minimal.css'; 
+@import './styles/minimal.css';
 @import './styles/brutalist.css';
 @import './styles/neobrutalist.css';
 @import './styles/modern.css';
@@ -11,20 +10,32 @@
 @import './styles/aurora.css';
 @import './styles/retro.css';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Import custom theme styles AFTER Tailwind directives */
-/* @import './styles/neumorphism.css'; */
-/* @import './styles/glassmorphism.css'; */
-/* @import './styles/minimal.css';  */
-/* @import './styles/brutalist.css'; */
-/* @import './styles/neobrutalist.css'; */
-/* @import './styles/modern.css'; */
-/* @import './styles/claymorphism.css'; */
-/* @import './styles/aurora.css'; */
-/* @import './styles/retro.css'; */
+@theme inline {
+  --color-theme-primary: var(--text-primary);
+  --color-theme-secondary: var(--text-secondary);
+  --color-theme-tertiary: var(--text-tertiary);
+  --color-theme-border: var(--border-color);
+  --color-highlight: var(--highlight-color);
+  --color-highlight-color: var(--highlight-color);
+  --color-chart-1: var(--chart-color-1);
+  --color-chart-2: var(--chart-color-2);
+  --color-chart-3: var(--chart-color-3);
+  --color-chart-4: var(--chart-color-4);
+  --color-chart-5: var(--chart-color-5);
+  --color-chart-6: var(--chart-color-6);
+  --color-chart-7: var(--chart-color-7);
+  --color-chart-btc: var(--chart-color-btc);
+  --color-chart-grid: var(--chart-grid-color);
+  --color-chart-axis: var(--chart-axis-color);
+  --color-chart-text: var(--chart-text-color);
+  --color-chart-tooltip-bg: var(--chart-tooltip-bg);
+  --color-chart-tooltip-text: var(--chart-tooltip-text);
+  --color-chart-positive: var(--chart-positive-color);
+  --color-chart-negative: var(--chart-negative-color);
+  --color-chart-warning: var(--chart-warning-color);
+  --color-chart-highlight: var(--chart-highlight-color);
+  --color-analytics-text-highlight: var(--analytics-text-highlight-color);
+}
 
 @layer base {
   /* --- Base Color Scheme Variables --- */

@@ -110,9 +110,14 @@ The goal is to decouple the *Color Scheme* (Light/Dark) from the *Visual Style* 
 
 1.  **Restructure CSS Variables:** Define variables based on combinations of `data-theme` and `data-visual-style`. Remove the style-switching logic from the media queries.
     ```css:src/index.css
-    @tailwind base;
-    @tailwind components;
-    @tailwind utilities;
+    @import "tailwindcss";
+
+    @theme inline {
+      --color-theme-primary: var(--text-primary);
+      --color-theme-secondary: var(--text-secondary);
+      --color-theme-tertiary: var(--text-tertiary);
+      --color-theme-border: var(--border-color);
+    }
 
     @layer base {
       /* --- Base Color Scheme Variables --- */
