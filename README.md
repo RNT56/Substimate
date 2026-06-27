@@ -178,7 +178,6 @@ The `main` branch is protected by a CI workflow that runs:
 ## Public Repository Status
 
 - Default branch: `main`
-- Historical secret-bearing environment files removed from reachable history
 - Public-safe `.env.example` included for local setup
 - Tailwind CSS migrated to v4 through the Vite plugin
 - React, Vite, React Router, Recharts, TypeScript, and related frontend tooling upgraded
